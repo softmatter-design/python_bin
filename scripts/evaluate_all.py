@@ -1,4 +1,4 @@
-#!/home/octa/OCTA85/Python310/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ################################
 import os
