@@ -48,7 +48,7 @@ def make_step(fn_ext, batch, f_eval):
 	out_udf = present_udf.replace("uin", "out")
 	batch += var.ver_cognac + ' -I ' + present_udf + ' -O ' + out_udf + ' -n ' + str(var.core) + ' \n'
 	if f_eval:
-		batch += 'evaluate_nw' + ' ' + out_udf + '\n'
+		batch += 'evaluate_nw.py ' + out_udf + '\n'
 	read_udf = out_udf
 	return present_udf, read_udf, batch
 
