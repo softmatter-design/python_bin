@@ -45,6 +45,9 @@ n_cell = 3
 multi_init = 1
 # 設定密度
 target_density = 0.85
+###################################
+# NPT 計算での初期膨潤度
+expand = 6
 
 ########################################################
 if nw_model == "3_Chain_S" or nw_model == "3_Chain_D":
@@ -115,11 +118,11 @@ def main():
 	target_name, target_cond, target_name, calcd_data_dic = init.calc_conditions()
 	##################
 	# baseUDF の作成
-	baseudf = SetupInitUDF.MakeInitUDF(sim_cond, target_cond, files_cond, names, target_name, calcd_data_dic)
+	baseudf = SetupInitUDF.MakeInitUDF(sim_cond, target_cond, files_cond, names, target_name, calcd_data_dic, expand)
 	target_dir = baseudf.setup_baseudf()
 	###############
 	# 
-	setup = EquivCalcSetup.SetUpUDF(nw_type, files_cond, target_name, py_mod, target_dir, names)
+	setup = EquivCalcSetup.SetUpUDF(nw_type, files_cond, target_name, target_dir, names)
 	setup.setup_udf()
 
 ################################################################################

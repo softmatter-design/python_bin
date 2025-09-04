@@ -9,7 +9,7 @@ import os
 # UDF の作成
 ##########################################
 class SetUpUDF:
-	def __init__(self, nw_type, files_cond, target_name, py_mod, target_dir, names):
+	def __init__(self, nw_type, files_cond, target_name, target_dir, names):
 		# 
 		self.calc_type = nw_type
 		#
@@ -19,8 +19,6 @@ class SetUpUDF:
 		self.core = ' -n ' + str(files_cond[3])
 		#
 		self.target_name = target_name
-		# モデュールの位置
-		self.py_mod = py_mod
 		self.f_eval_py = 'evaluate_all.py'
 		# ファイルのディレクトリ
 		self.target_dir = target_dir
@@ -46,25 +44,25 @@ class SetUpUDF:
 		if self.calc_type == "homo_KG":
 			print("making homo KG")
 			batch = self.homo_kg(batch)
-			# 評価用のパイソンスクリプトを作成
-			self.evaluate_setup("chain")
+			# # 評価用のパイソンスクリプトを作成
+			# self.evaluate_setup("chain")
 		elif self.calc_type == "homo_sunuke":
 			print("making homo sunuke")
 			batch = self.homo_sunuke(batch)
-			# 評価用のパイソンスクリプトを作成
-			self.evaluate_setup("chain")
+			# # 評価用のパイソンスクリプトを作成
+			# self.evaluate_setup("chain")
 		elif self.calc_type == "KG_entangled" or self.calc_type == "KG_gel" or self.calc_type == "KG_multi":
 			batch = self.kg_calc(batch)
-			# 評価用のパイソンスクリプトを作成
-			self.evaluate_setup("strand")
+			# # 評価用のパイソンスクリプトを作成
+			# self.evaluate_setup("strand")
 		elif self.calc_type == "Sunuke":
 			batch = self.sunuke_calc(batch)
-			# 評価用のパイソンスクリプトを作成
-			self.evaluate_setup("strand")
+			# # 評価用のパイソンスクリプトを作成
+			# self.evaluate_setup("strand")
 		elif self.calc_type == "KG_NPT":
 			batch = self.npt_calc(batch)
-			# 評価用のパイソンスクリプトを作成
-			self.evaluate_setup("strand")
+			# # 評価用のパイソンスクリプトを作成
+			# self.evaluate_setup("strand")
 
 		#####################
 		# バッチファイルを作成

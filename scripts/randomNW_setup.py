@@ -4,6 +4,7 @@
 from octa_module import RandomNW
 from octa_module import SetupInitUDF
 from octa_module import EquivCalcSetup
+import sys
 ################################################################
 ## 計算条件
 ##################
@@ -26,7 +27,7 @@ n_strand = 4
 n_segments = 48
 ##########################
 # 一辺当たりの単位ユニット数
-n_cell = 4
+n_cell = 2
 #################
 # ストランドの側鎖
 n_sc = 0
@@ -41,14 +42,14 @@ expand = 6
 # トポロジー変換に関する設定
 ################################################################
 # リスタートの有無
-restart = 1
+restart = 0
 ############################################################
 # プレ探索の条件：繰り返しサンプリング数、最小構造探索の繰り返し数
-pre_sampling = 1000
+pre_sampling = 100
 pre_try = 100
 # 本探索条件
-n_sampling = 1000
-n_try = 1000
+n_sampling = 100
+n_try = 100
 
 ###############
 cond_top = [pre_try, pre_sampling, n_try, n_sampling]
@@ -135,7 +136,7 @@ def main():
 	
 	##################
 	# Init_UDF の作成
-	setup = EquivCalcSetup.SetUpUDF(nw_type, files_cond, target_name, py_mod, target_dir, names)
+	setup = EquivCalcSetup.SetUpUDF(nw_type, files_cond, target_name, target_dir, names)
 	setup.setup_udf()
 
 ################################################################################
