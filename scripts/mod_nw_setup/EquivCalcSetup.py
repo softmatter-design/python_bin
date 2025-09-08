@@ -88,7 +88,7 @@ def entangle_calc(batch):
 		pre = read_udf
 		template = present_udf
 		# KG 鎖に設定
-		time = [0.01, 1000000, 10000]
+		time = [0.01, 100000, 1000]
 		batch = make_title(batch, var.target_name + "Calculating-KG")
 		fn_ext = ['KG_', "uin.udf"]
 		f_eval = 0
@@ -99,7 +99,7 @@ def entangle_calc(batch):
 	elif var.strand_type == 'FENE':
 		# セグメント間相互作用をなくし、
 		# bond= Harmonicとして鎖を設定
-		time = [0.01, 1000000, 10000]
+		time = [0.01, 100000, 1000]
 		batch = make_title(batch, var.target_name + "Calculating-Harmonic")
 		fn_ext = ['Harmonic_', "uin.udf"]
 		f_eval = 0
@@ -119,7 +119,7 @@ def entangle_calc(batch):
 	elif var.strand_type == 'Harmonic':
 		# セグメント間相互作用をなくし、
 		# bond= Harmonicとして鎖を設定
-		time = [0.01, 1000000, 10000]
+		time = [0.01, 100000, 1000]
 		batch = make_title(batch, var.target_name + "Calculating-Harmonic")
 		fn_ext = ['Harmonic_', "uin.udf"]
 		f_eval = 0
