@@ -48,7 +48,7 @@ def make_step(fn_ext, batch, f_eval):
 	out_udf = present_udf.replace("uin", "out")
 	batch += var.ver_cognac + ' -I ' + present_udf + ' -O ' + out_udf + ' -n ' + str(var.core) + ' \n'
 	if f_eval:
-		batch += 'evaluate_nw.py ' + out_udf + '\n'
+		batch += 'evaluate_all.py ' + out_udf + '\n'
 	read_udf = out_udf
 	return present_udf, read_udf, batch
 
@@ -58,20 +58,19 @@ def make_step(fn_ext, batch, f_eval):
 ######################################################################
 # KG鎖の計算
 def entangle_calc(batch):
+	# 初期状態を作成
+	# 弱いセグメント間相互作用（Force Capped LJ:r=1.1）を入れて緩和
+	batch = make_title(batch, var.target_name + "Calculating-Init")
+	fn_ext = ['Init_', "uin.udf"]
+	time = [0.01, 100000, 1000]
+	f_eval = 0
+	present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+	step_nonbond_setup(var.base_udf, '', present_udf, time, 1.1)
+	pre = read_udf
+	template = present_udf
 	if var.strand_type == 'KG':
 		# Force Capped LJ によりステップワイズに初期化
-		# r = 1.1
-		batch = make_title(batch, var.target_name + "Calculating-Init")
-		fn_ext = ['Init_', "uin.udf"]
-		time = [0.01, 100000, 1000]
-		f_eval = 0
-		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-		step_nonbond_setup(var.base_udf, '', present_udf, time, 1.1)
-		pre = read_udf
-		template = present_udf
-		#
 		for r in var.step_rfc:
-			# 平衡化
 			batch = make_title(batch, var.target_name + "Calculating-Pre_" + str(round(r, 3)).replace('.', '_'))
 			fn_ext = ['Pre_rfc_' + str(round(r, 3)).replace('.', '_') + "_", "uin.udf"]
 			f_eval = 0
@@ -79,6 +78,15 @@ def entangle_calc(batch):
 			step_nonbond_setup(template, pre, present_udf, var.step_rfc_time, r)
 			pre = read_udf
 			template = present_udf
+		# KG 鎖への遷移
+		time = [0.01, 1000, 100]
+		batch = make_title(batch, var.target_name + "Calculating-pre_KG")
+		fn_ext = ['PreKG_', "uin.udf"]
+		f_eval = 0
+		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+		pre_kg_setup(template, pre, present_udf, time)
+		pre = read_udf
+		template = present_udf
 		# KG 鎖に設定
 		time = [0.01, 1000000, 10000]
 		batch = make_title(batch, var.target_name + "Calculating-KG")
@@ -88,92 +96,9 @@ def entangle_calc(batch):
 		kg_setup(template, pre, present_udf, time)
 		pre = read_udf
 		template = present_udf
-		# 平衡化計算
-		for i in range(var.equilib_repeat):
-			# 平衡化
-			batch = make_title(batch, var.target_name + "Calculating-Eq_" + str(i))
-			fn_ext = ['Eq_' + str(i) + "_", "uin.udf"]
-			f_eval = 1
-			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.equilib_time)
-			pre = read_udf
-			template = present_udf
-		# グリーン久保
-		if var.greenkubo_repeat != 0:
-			for i in range(var.greenkubo_repeat):
-				# 平衡化
-				batch = make_title(batch, var.target_name + "Calculating-GK_" + str(i))
-				fn_ext = ['GK_' + str(i) + "_", "uin.udf"]
-				f_eval = 1
-				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				greenkubo_setup(template, pre, present_udf, var.greenkubo_time)
-				pre = read_udf
-				template = present_udf
-		return batch
 	elif var.strand_type == 'FENE':
-		# Force Capped LJ によりステップワイズに初期化
-		# r = 1.1
-		batch = make_title(batch, var.target_name + "Calculating-Init")
-		fn_ext = ['Init_', "uin.udf"]
-		time = [0.01, 100000, 1000]
-		f_eval = 0
-		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-		step_nonbond_setup(var.base_udf, '', present_udf, time, r=1.1)
-		pre = read_udf
-		template = present_udf
-		#
-		for r in var.step_rfc:
-			# 平衡化
-			batch = make_title(batch, var.target_name + "Calculating-Pre_" + str(round(r, 3)).replace('.', '_'))
-			fn_ext = ['Pre_rfc_' + str(round(r, 3)).replace('.', '_') + "_", "uin.udf"]
-			f_eval = 0
-			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			step_nonbond_setup(template, pre, present_udf, var.step_rfc_time, r)
-			pre = read_udf
-			template = present_udf
-		# KG 鎖に設定
-		time = [0.01, 1000000, 10000]
-		batch = make_title(batch, var.target_name + "Calculating-FENE")
-		fn_ext = ['FENE_', "uin.udf"]
-		f_eval = 0
-		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-		FENE_setup(template, pre, present_udf, time)
-		pre = read_udf
-		template = present_udf
-		# 平衡化計算
-		for i in range(var.equilib_repeat):
-			# 平衡化
-			batch = make_title(batch, var.target_name + "Calculating-Eq_" + str(i))
-			fn_ext = ['Eq_' + str(i) + "_", "uin.udf"]
-			f_eval = 1
-			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.equilib_time)
-			pre = read_udf
-			template = present_udf
-		# グリーン久保
-		if var.greenkubo_repeat != 0:
-			for i in range(var.greenkubo_repeat):
-				# 平衡化
-				batch = make_title(batch, var.target_name + "Calculating-GK_" + str(i))
-				fn_ext = ['GK_' + str(i) + "_", "uin.udf"]
-				f_eval = 1
-				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				greenkubo_setup(template, pre, present_udf, var.greenkubo_time)
-				pre = read_udf
-				template = present_udf
-		return batch
-
-	elif var.strand_type == 'Harmonic':
-		# 初期状態で弱いセグメント間相互作用を入れて緩和
-		batch = make_title(batch, var.target_name + "Calculating-Init")
-		fn_ext = ['Init_', "uin.udf"]
-		time = [0.01, 100000, 1000]
-		f_eval = 0
-		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-		harmonic_setup(var.base_udf, '', present_udf, time, 1.1)
-		pre = read_udf
-		template = present_udf
-		# セグメント間相互作用をなくす
+		# セグメント間相互作用をなくし、
+		# bond= Harmonicとして鎖を設定
 		time = [0.01, 1000000, 10000]
 		batch = make_title(batch, var.target_name + "Calculating-Harmonic")
 		fn_ext = ['Harmonic_', "uin.udf"]
@@ -182,28 +107,50 @@ def entangle_calc(batch):
 		harmonic(template, pre, present_udf, time)
 		pre = read_udf
 		template = present_udf
-		# 平衡化計算
-		for i in range(var.equilib_repeat):
+		# bond=FENEとして鎖を設定
+		time = [0.01, 1000000, 10000]
+		batch = make_title(batch, var.target_name + "Calculating-FENE")
+		fn_ext = ['FENE_', "uin.udf"]
+		f_eval = 0
+		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+		FENE_setup(template, pre, present_udf, time)
+		pre = read_udf
+		template = present_udf
+	elif var.strand_type == 'Harmonic':
+		# セグメント間相互作用をなくし、
+		# bond= Harmonicとして鎖を設定
+		time = [0.01, 1000000, 10000]
+		batch = make_title(batch, var.target_name + "Calculating-Harmonic")
+		fn_ext = ['Harmonic_', "uin.udf"]
+		f_eval = 0
+		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+		harmonic(template, pre, present_udf, time)
+		pre = read_udf
+		template = present_udf
+	
+	###########
+	# 平衡化計算
+	for i in range(var.equilib_repeat):
+		# 平衡化
+		batch = make_title(batch, var.target_name + "Calculating-Eq_" + str(i))
+		fn_ext = ['Eq_' + str(i) + "_", "uin.udf"]
+		f_eval = 1
+		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+		eq_setup(template, pre, present_udf, var.equilib_time)
+		pre = read_udf
+		template = present_udf
+	# グリーン久保
+	if var.greenkubo_repeat != 0:
+		for i in range(var.greenkubo_repeat):
 			# 平衡化
-			batch = make_title(batch, var.target_name + "Calculating-Eq_" + str(i))
-			fn_ext = ['Eq_' + str(i) + "_", "uin.udf"]
+			batch = make_title(batch, var.target_name + "Calculating-GK_" + str(i))
+			fn_ext = ['GK_' + str(i) + "_", "uin.udf"]
 			f_eval = 1
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.equilib_time)
+			greenkubo_setup(template, pre, present_udf, var.greenkubo_time)
 			pre = read_udf
 			template = present_udf
-		# グリーン久保
-		if var.greenkubo_repeat != 0:
-			for i in range(var.greenkubo_repeat):
-				# 平衡化
-				batch = make_title(batch, var.target_name + "Calculating-GK_" + str(i))
-				fn_ext = ['GK_' + str(i) + "_", "uin.udf"]
-				f_eval = 1
-				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				greenkubo_setup(template, pre, present_udf, var.greenkubo_time)
-				pre = read_udf
-				template = present_udf
-		return batch
+	return batch
 
 ###########################################
 # NPT 条件で、設定密度まで圧縮
@@ -364,7 +311,7 @@ def step_nonbond_setup(template, read_udf, present_udf, time, r_fc):
 	return
 
 ###############################################
-# ボンドをHarmonic、ノンボンドをLJとしてKG鎖を設定
+# ボンドをHarmonic、ノンボンドをLJとして鎖を設定
 def pre_kg_setup(template, read_udf, present_udf, time):
 	u = UDFManager(os.path.join(var.target_dir, template))
 	u.jump(-1)
@@ -429,7 +376,6 @@ def pre_kg_setup(template, read_udf, present_udf, time):
 	#--- Write UDF ---
 	u.write(os.path.join(var.target_dir, present_udf))
 	return
-
 
 ###############################################
 # ボンドをFENE、ノンボンドをLJとしてKG鎖を設定
@@ -500,8 +446,63 @@ def kg_setup(template, read_udf, present_udf, time):
 	u.write(os.path.join(var.target_dir, present_udf))
 	return
 
+##############################################################################
+# ボンドをHarmonicとして鎖を設定
+# Force Capped LJ でアングルを設定
+def harmonic(template, read_udf, present_udf, time):
+	u = UDFManager(os.path.join(var.target_dir, template))
+	# goto global data
+	u.jump(-1)
+	#--- Simulation_Conditions ---
+	# Dynamics_Conditions
+	p = 'Simulation_Conditions.Dynamics_Conditions.'
+	u.put(100000000., 	p + 'Max_Force')
+	u.put(time[0], 		p + 'Time.delta_T')
+	u.put(time[1], 		p + 'Time.Total_Steps')
+	u.put(time[2], 		p + 'Time.Output_Interval_Steps')
+	u.put(1.0, 			p + 'Temperature.Temperature')
+	u.put(0., 			p + 'Pressure_Stress.Pressure')
+	# Calc_Potential_Flags
+	p = 'Simulation_Conditions.Calc_Potential_Flags.'
+	u.put(1, p + 'Bond')
+	u.put(1, p + 'Angle')
+	u.put(0, p + 'Non_Bonding_Interchain')
+	u.put(0, p + 'Non_Bonding_1_3')
+	u.put(0, p + 'Non_Bonding_1_4')
+	u.put(0, p + 'Non_Bonding_Intrachain')
+	#--- Initial_Structure ---
+	# Generate_Method
+	p = 'Initial_Structure.Generate_Method.'
+	u.put('Restart', p+'Method')
+	u.put([read_udf, -1, 1, 0], p+'Restart')
+	# Relaxation
+	p = 'Initial_Structure.Relaxation.'
+	u.put(0, p + 'Relaxation')
+	#--- Simulation_Conditions ---
+	# bond
+	for i, b_name in enumerate(var.bond_name):
+		p = 'Molecular_Attributes.Bond_Potential[].'
+		u.put(b_name, 		p + 'Name', [i])
+		u.put('Harmonic', 	p + 'Potential_Type', [i])
+		u.put(0.97,			p + 'R0', [i])
+		u.put(1000, 		p + 'Harmonic.K', [i])
+	# Angle
+	for i, anglename in enumerate(var.angle_name):
+		p = 'Molecular_Attributes.Angle_Potential[].'
+		u.put(anglename, 		p + 'Name', [i])
+		u.put('Force_Cap_LJ', 	p + 'Potential_Type', [i])
+		u.put(73.0, 				p + 'theta0', [i])
+		u.put(1.0, 			p + 'Force_Cap_LJ.sigma', [i])
+		u.put(1.0, 			p + 'Force_Cap_LJ.epsilon', [i])
+		u.put(1.122462, 		p + 'Force_Cap_LJ.cutoff', [i])
+		u.put(0.8, 			p + 'Force_Cap_LJ.r_FC', [i])
+	#--- Write UDF ---
+	u.write(os.path.join(var.target_dir, present_udf))
+	return
+
 ###############################################
-# ボンドをFENE、ノンボンドをLJとしてKG鎖を設定
+# ボンドをFENEとして鎖を設定
+# Force Capped LJ でアングルを設定
 def FENE_setup(template, read_udf, present_udf, time):
 	u = UDFManager(os.path.join(var.target_dir, template))
 	u.jump(-1)
@@ -543,131 +544,6 @@ def FENE_setup(template, read_udf, present_udf, time):
 		u.put(30,			p + 'FENE_LJ.K', [i])
 		u.put(1.0,			p + 'FENE_LJ.sigma', [i])
 		u.put(1.0,			p + 'FENE_LJ.epsilon', [i])
-	# Angle
-	for i, anglename in enumerate(var.angle_name):
-		p = 'Molecular_Attributes.Angle_Potential[].'
-		u.put(anglename, 		p + 'Name', [i])
-		u.put('Force_Cap_LJ', 	p + 'Potential_Type', [i])
-		u.put(73.0, 				p + 'theta0', [i])
-		u.put(1.0, 			p + 'Force_Cap_LJ.sigma', [i])
-		u.put(1.0, 			p + 'Force_Cap_LJ.epsilon', [i])
-		u.put(1.122462, 		p + 'Force_Cap_LJ.cutoff', [i])
-		u.put(0.8, 			p + 'Force_Cap_LJ.r_FC', [i])
-	#--- Write UDF ---
-	u.write(os.path.join(var.target_dir, present_udf))
-	return
-
-##############################################################################
-# Force Capped LJ で弱い相互作用を入れて初期緩和
-def harmonic_setup(template, read_udf, present_udf, time, r_fc):
-	u = UDFManager(os.path.join(var.target_dir, template))
-	# goto global data
-	u.jump(-1)
-	#--- Simulation_Conditions ---
-	# Dynamics_Conditions
-	p = 'Simulation_Conditions.Dynamics_Conditions.'
-	u.put(100000000., 	p + 'Max_Force')
-	u.put(time[0], 		p + 'Time.delta_T')
-	u.put(time[1], 		p + 'Time.Total_Steps')
-	u.put(time[2], 		p + 'Time.Output_Interval_Steps')
-	u.put(1.0, 			p + 'Temperature.Temperature')
-	u.put(0., 			p + 'Pressure_Stress.Pressure')
-	# Calc_Potential_Flags
-	p = 'Simulation_Conditions.Calc_Potential_Flags.'
-	u.put(1, p + 'Bond')
-	u.put(1, p + 'Angle')
-	u.put(1, p + 'Non_Bonding_Interchain')
-	u.put(1, p + 'Non_Bonding_1_3')
-	u.put(1, p + 'Non_Bonding_1_4')
-	u.put(1, p + 'Non_Bonding_Intrachain')
-	#--- Initial_Structure ---
-	# Initial_Unit_Cell
-	p = 'Initial_Structure.Initial_Unit_Cell.'
-	u.put(var.density_mod, p + 'Density')
-	u.put([0, 0, 0, 90.0, 90.0, 90.0], p + 'Cell_Size')
-	# Generate_Method
-	p = 'Initial_Structure.Generate_Method.'
-	u.put('Restart', p+'Method')
-	u.put(['', -1, 0, 0], p+'Restart')
-	# Relaxation
-	p = 'Initial_Structure.Relaxation.'
-	u.put(1, p + 'Relaxation')
-	u.put('DYNAMICS', p + 'Method')
-	u.put(100, p + 'Max_Relax_Force')
-	u.put(100000, p + 'Max_Relax_Steps')
-	#--- Simulation_Conditions ---
-	# bond
-	for i, b_name in enumerate(var.bond_name):
-		p = 'Molecular_Attributes.Bond_Potential[].'
-		u.put(b_name, 		p + 'Name', [i])
-		u.put('Harmonic', 	p + 'Potential_Type', [i])
-		u.put(0.97,			p + 'R0', [i])
-		u.put(1000, 		p + 'Harmonic.K', [i])
-	# Angle
-	for i, anglename in enumerate(var.angle_name):
-		p = 'Molecular_Attributes.Angle_Potential[].'
-		u.put(anglename, 		p + 'Name', [i])
-		u.put('Force_Cap_LJ', 	p + 'Potential_Type', [i])
-		u.put(73.0, 				p + 'theta0', [i])
-		u.put(1.0, 			p + 'Force_Cap_LJ.sigma', [i])
-		u.put(1.0, 			p + 'Force_Cap_LJ.epsilon', [i])
-		u.put(1.122462, 		p + 'Force_Cap_LJ.cutoff', [i])
-		u.put(0.8, 			p + 'Force_Cap_LJ.r_FC', [i])
-	#--- Pair_Interaction[] ---
-	for i, pairname in enumerate(var.pair_name):
-		p = 'Interactions.Pair_Interaction[].'
-		u.put(pairname,   					p + 'Name', [i])
-		u.put('Force_Cap_LJ', 		p + 'Potential_Type', [i])
-		u.put(var.site_pair_name[i][0],	p + 'Site1_Name', [i])
-		u.put(var.site_pair_name[i][1],	p + 'Site2_Name', [i])
-		u.put(1.12246204830937,				p + 'Cutoff', [i])
-		u.put(1.0,							p + 'Scale_1_4_Pair', [i])
-		u.put(1.0,							p + 'Force_Cap_LJ.sigma', [i])
-		u.put(1.0,							p + 'Force_Cap_LJ.epsilon', [i])
-		u.put(r_fc,							p + 'Force_Cap_LJ.r_FC', [i])
-	#--- Write UDF ---
-	u.write(os.path.join(var.target_dir, present_udf))
-	return
-
-##############################################################################
-# Force Capped LJ で弱い相互作用を入れて初期緩和
-def harmonic(template, read_udf, present_udf, time):
-	u = UDFManager(os.path.join(var.target_dir, template))
-	# goto global data
-	u.jump(-1)
-	#--- Simulation_Conditions ---
-	# Dynamics_Conditions
-	p = 'Simulation_Conditions.Dynamics_Conditions.'
-	u.put(100000000., 	p + 'Max_Force')
-	u.put(time[0], 		p + 'Time.delta_T')
-	u.put(time[1], 		p + 'Time.Total_Steps')
-	u.put(time[2], 		p + 'Time.Output_Interval_Steps')
-	u.put(1.0, 			p + 'Temperature.Temperature')
-	u.put(0., 			p + 'Pressure_Stress.Pressure')
-	# Calc_Potential_Flags
-	p = 'Simulation_Conditions.Calc_Potential_Flags.'
-	u.put(1, p + 'Bond')
-	u.put(1, p + 'Angle')
-	u.put(0, p + 'Non_Bonding_Interchain')
-	u.put(0, p + 'Non_Bonding_1_3')
-	u.put(0, p + 'Non_Bonding_1_4')
-	u.put(0, p + 'Non_Bonding_Intrachain')
-	#--- Initial_Structure ---
-	# Generate_Method
-	p = 'Initial_Structure.Generate_Method.'
-	u.put('Restart', p+'Method')
-	u.put([read_udf, -1, 1, 0], p+'Restart')
-	# Relaxation
-	p = 'Initial_Structure.Relaxation.'
-	u.put(0, p + 'Relaxation')
-	#--- Simulation_Conditions ---
-	# bond
-	for i, b_name in enumerate(var.bond_name):
-		p = 'Molecular_Attributes.Bond_Potential[].'
-		u.put(b_name, 		p + 'Name', [i])
-		u.put('Harmonic', 	p + 'Potential_Type', [i])
-		u.put(0.97,			p + 'R0', [i])
-		u.put(1000, 		p + 'Harmonic.K', [i])
 	# Angle
 	for i, anglename in enumerate(var.angle_name):
 		p = 'Molecular_Attributes.Angle_Potential[].'
