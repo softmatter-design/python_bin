@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##########################
-import evaluate_deform
+from evaluate_deform import EvaluateCyclicDeform
 ##### Main #####
 def main():
-	evaluate_deform.simple_deform()
+	EvaluateCyclicDeform.cyclic_deform()
 	return
 ##########################
 # Main

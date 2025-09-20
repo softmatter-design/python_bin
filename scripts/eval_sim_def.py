@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##########################
-import cognac_deform
+from evaluate_deform import EvaluateSimpleDeform
 ##### Main #####
 def main():
-	cognac_deform.deform()
-
+	EvaluateSimpleDeform.simple_deform()
 	return
 ##########################
 # Main
 if __name__=='__main__':
 	main()
-

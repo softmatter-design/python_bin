@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##########################
-import evaluate_deform
+from evaluate_deform import EvaluateStepDeform
 ##### Main #####
 def main():
-	evaluate_deform.step_deform()
+	EvaluateStepDeform.step_deform()
 	return
 ##########################
 # Main
