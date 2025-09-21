@@ -13,7 +13,7 @@ import sys
 
 from scipy.signal import savgol_filter
 
-import evaluate_deform.variables as var
+import mod_evaluate_deform.variables as var
 ###########################################################
 def step_deform():
 	read_arg()	

@@ -11,7 +11,7 @@ import platform
 import subprocess
 import sys
 
-import evaluate_deform.variables as var
+import mod_evaluate_deform.variables as var
 ###########################################################
 # print("This is module!")
 ###########################################################

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##########################
-from evaluate_deform import EvaluateSimpleDeform
+from mod_evaluate_deform import EvaluateSimpleDeform
 ##### Main #####
 def main():
 	EvaluateSimpleDeform.simple_deform()

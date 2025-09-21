@@ -7,6 +7,7 @@ import codecs
 import numpy as np
 from UDFManager import UDFManager
 from mod_nw_setup import variables as var
+import mod_global.glob_var as globvar
 #######################################################
 #
 def setupcondition():
@@ -154,12 +155,12 @@ def readconditionudf():
 	u.jump(-1)
 	##################
 	# 使用するCognacのバージョン
-	var.ver_cognac = u.get('CalcCond.Cognac_ver')
+	globvar.ver_Cognac = u.get('CalcCond.Cognac_ver')
 	# 計算に使用するコア数
 	var.core = u.get('CalcCond.Cores')
 	# ベースとするUDFの名前
 	var.base_udf = "base_uin.udf"
-	var.blank_udf = var.ver_cognac + '.udf'
+	var.blank_udf = globvar.ver_Cognac + '.udf'
 
 	#######################################################
 	## 計算ターゲット
@@ -527,7 +528,7 @@ def make_cond_udf():
 	u = UDFManager(os.path.join(var.target_dir, 'target_condition.udf'))
 	u.jump(-1)
 	##################
-	u.put(var.ver_cognac, 'CalcCond.Cognac_ver')
+	u.put(globvar.ver_Cognac, 'CalcCond.Cognac_ver')
 	u.put(var.core, 'CalcCond.Cores')
 	##################
 	u.put(var.nw_model, 'TargetCond.Model.TargetModel')

@@ -6,6 +6,7 @@ import platform
 import os
 from UDFManager import UDFManager
 from mod_nw_setup import variables as var
+import mod_global.glob_var as globvar
 ##########################################
 # UDF の作成
 ####################################
@@ -46,9 +47,13 @@ def make_title(batch, title):
 def make_step(fn_ext, batch, f_eval):
 	present_udf = fn_ext[0] + fn_ext[1]
 	out_udf = present_udf.replace("uin", "out")
-	batch += var.ver_cognac + ' -I ' + present_udf + ' -O ' + out_udf + ' -n ' + str(var.core) + ' \n'
+	batch += globvar.ver_Cognac + ' -I ' + present_udf + ' -O ' + out_udf + ' -n ' + str(var.core) + ' \n'
 	if f_eval:
-		batch += 'evaluate_all.py ' + out_udf + '\n'
+		if platform.system() == "Windows":
+			path = os.path.join(globvar.bin_path, 'evaluate_all.py')
+			batch += 'python ' + path + ' ' + out_udf + '\n'
+		elif platform.system() == "Linux":
+			batch += 'evaluate_all.py ' + out_udf + '\n'
 	read_udf = out_udf
 	return present_udf, read_udf, batch
 
