@@ -65,7 +65,7 @@ def set_cyclic_rotation(middle_dir, cyc_def_max, cyc_rate):
 		option = f'python {str(path):} -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} -a \n'
 	elif platform.system() == "Linux":
 		task = 'sh calc.sh\n'
-		filename = 'calc_all.sh'
+		filename = 'calc_series.sh'
 		option = f'eval_cyc_def.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} -a \n'
 	gen.make_batch_series(['rotate_' + dir for dir in var.cyc_rotate], middle_dir, task, filename, option)
 	return
@@ -100,12 +100,14 @@ def make_cycle_batch(cyc_def_max, cyc_rate):
 		repeatcount += str(var.cyc_count) + ' '
 	# 評価スクリプトを追加
 	if platform.system() == "Windows":
+		filename = 'calc.bat'
 		path = os.path.join(globvar.bin_path, 'eval_cyc_def.py')
 		var.batch += f'python {str(path):} -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:}\n'
 	elif platform.system() == "Linux":
+		filename = 'calc.sh'
 		var.batch += f'eval_cyc_def.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:}\n'
 	# バッチファイルを作成
-	gen.write_batchfile(var.calc_dir, 'calc.bat', var.batch)
+	gen.write_batchfile(var.calc_dir, filename, var.batch)
 	return
 #
 def make_cycle(cyc_def_max, cyc_rate):
