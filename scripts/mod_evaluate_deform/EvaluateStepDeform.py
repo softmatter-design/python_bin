@@ -64,6 +64,7 @@ def calc_step_deform(t_udf):
 	stress = []
 	temp = []
 	# データ読み込み
+	prev_g = 0
 	for rec in range(1, uobj.totalRecord()):
 		print("Reading Rec.=", rec)
 		uobj.jump(rec)
@@ -78,12 +79,15 @@ def calc_step_deform(t_udf):
 			tmp_strain = uobj.get('Structure.Unit_Cell.Shear_Strain')
 			tmp_stress = uobj.get('Statistics_Data.Stress.Total.Batch_Average.xy')
 			tmp_g = tmp_stress/tmp_strain
+		if tmp_g < 0:
+			tmp_g = prev_g/2.
 		strain.append(tmp_strain)
 		stress.append(tmp_stress)
 		g.append(tmp_g)
 		#
 		tmp_time = round(uobj.get("Time"), 4)
 		var.stepdata_dic.setdefault(tmp_time, []).append(tmp_g)
+		prev_g = tmp_g
 	#
 	var.step_strain = tmp_strain
 	var.elapsed_time = time[-1]
@@ -134,6 +138,7 @@ def calc_relax_all():
 #----- Read Data
 def read_relax(target):
 	uobj = UDFManager(target)
+	prev_g = 0
 	for i in range(1, uobj.totalRecord()):
 		print("Reading Rec.=", i)
 		uobj.jump(i)
@@ -146,8 +151,11 @@ def read_relax(target):
 			tmp_stress = uobj.get('Statistics_Data.Stress.Total.Batch_Average.xy')
 			tmp_g = tmp_stress/var.step_strain
 		#
+		if tmp_g < 0:
+			tmp_g = prev_g/2.
 		tmp_time = round(uobj.get("Time"), 4) + var.elapsed_time
 		var.stepdata_dic.setdefault(tmp_time, []).append(tmp_g)
+		prev_g = tmp_g
 	return
 
 ###############################

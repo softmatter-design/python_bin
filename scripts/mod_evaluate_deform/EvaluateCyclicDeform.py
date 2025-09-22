@@ -28,6 +28,7 @@ def cyclic_deform():
 		# plot_ss()
 	return
 
+#################
 # Read argument 
 def read_arg():
 	parser = argparse.ArgumentParser(description='Evaluate deformed simulations !')
@@ -51,6 +52,7 @@ def read_arg():
 		var.f_average = True
 	return
 
+################
 # File Select
 def file_listing():
 	target = '*_out.udf'
@@ -66,7 +68,6 @@ def file_listing():
 ############################
 # Calculate stress either for shear or stretch deformation
 def calc_stress_all():
-	print(var.sorted_udf)
 	for list in var.sorted_udf:
 		# tmp_data = []
 		for target in list:
@@ -111,7 +112,6 @@ def read_and_calc(target):
 			stress_list = uobj.get("Statistics_Data.Stress.Total.Batch_Average")
 			stress = (cell[0]*cell[1])*(stress_list[2]-(stress_list[0] + stress_list[1])/2.)/area_init
 			strain = uobj.get("Structure.Unit_Cell.Cell_Size.c")/z_init
-
 		data.append([str(strain), stress])
 	return data
 
@@ -149,13 +149,13 @@ def average():
 			for key in data_dic.keys():
 				ave = sum(data_dic[key])/len(data_dic[key])
 				ave_list.append([float(key), ave])
-			#
+			
 			smoothed_list = smooth(direction, ave_list)
 			if direction == 'Forward':
 				accum_f += integral(smoothed_list)
 			else:
 				accum_b += integral(smoothed_list)
-			#
+			
 			result_dic[id] = ave_list
 			smooth_dic[id] = smoothed_list
 

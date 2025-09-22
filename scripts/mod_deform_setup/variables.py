@@ -1,7 +1,7 @@
 # Values used for calculation
 deform_udf = ''
 # 使用するCognacのバージョン
-ver_Cognac = "cognac112"
+# ver_Cognac = "cognac112"
 # シミュレーションに使用するコア数
 core = 1
 
@@ -55,12 +55,9 @@ step_rotate = []
 step_dirlist = []
 
 
-# step_readudf = ''
-# step_direction = ''
 
-
-func = 4
-nu = 0.1
+func = 0
+nu = 0.
 
 
 # 計算で使用するディレクトリ

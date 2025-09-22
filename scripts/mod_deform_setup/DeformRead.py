@@ -47,6 +47,7 @@ def read_nw_cond():
 		cond_u = UDFManager('target_condition.udf')
 		var.func = cond_u.get('TargetCond.NetWork.N_Strands')
 		var.nu = cond_u.get('TargetCond.System.Nu')
+		var.system_size = cond_u.get('TargetCond.System.SystemSize')
 	return
 
 # シミュレーション条件を設定する。

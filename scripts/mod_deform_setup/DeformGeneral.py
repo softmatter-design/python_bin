@@ -3,15 +3,12 @@
 ##### Import #####
 from UDFManager import *
 
-# import argparse
-# import codecs
 import numpy as np
 import os
 import platform
-# import sys
-# import uuid
 
 import mod_deform_setup.variables as var
+
 ##################
 # アトムのポジションを回転
 def rotate_position(u, axis):
@@ -92,14 +89,13 @@ def write_batchfile(dir, filename, batch_file):
 #######################################
 # サブディレクトリを使うバッチファイルを作成
 def make_batch_series(subdir_list, dir, task, filename, option):
+	batch_series = '#!/bin/bash\n'
 	for subdir in subdir_list:
 		if platform.system() == "Windows":
-			batch_series = ''
 			batch_series += 'cd /d %~dp0\\' + subdir +'\n'
 			batch_series += task
 			batch_series += 'cd /d %~dp0\n'
 		elif platform.system() == "Linux":
-			batch_series = '#!/bin/bash\n'
 			batch_series += 'cd ./' + subdir +'\n'
 			batch_series += task
 			batch_series += 'cd ../\n'

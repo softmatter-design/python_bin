@@ -37,11 +37,6 @@ def set_simple_eachrate():
 	elif platform.system() == "Linux":
 		task = 'sh calc_series.sh\n'
 		filename = 'calc_all.sh'
-		#
-		# task2 = 'sh eval_all.sh\n'
-		# filename2 = 'eval_all.sh'
-		# option = f'simple_deform.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} -s \n'
-		# gen.make_batch_series([f'rate_{rate:4.0e}' for rate in var.sim_rate_list], var.sim_basedir, task2, filename2, option)
 	gen.make_batch_series([f'rate_{rate:4.0e}' for rate in var.sim_rate_list], var.sim_basedir, task, filename,'')
 
 	for var.sim_rate in var.sim_rate_list:
