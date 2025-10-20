@@ -69,73 +69,95 @@ def read_all():
 		val.cn = cond_u.get('TargetCond.Strand.Characteristic_Ratio')
 		val.nu = cond_u.get('TargetCond.System.Nu')
 	# ネットワークストランドのリストを作成
-	make_chain_list()
-	val.chain_len = len(val.chain_list[0][1])
+	strand, dangling, roop, jp_pair = make_chain_list()
+	val.chain_list = strand
+	val.chain_len = len(strand[0][1][0])
+	# print(val.chain_len)
 	return
 
 # 架橋点およびストランドの構成アトムのリスト
 def make_chain_list():
-	jp_list = make_jp_list()
-	#
-	jp_pair_list = []
-	for target_jp in jp_list:
-		jp_pair, strand = make_jp_pair(target_jp)
-		for i in jp_pair:
-			jp_pair_list.append(i)
-		if len(strand) > 0:
-			for i in strand:
-				val.chain_list.append(i)
-	return
-
-# 架橋点のリストを作成
-def make_jp_list():
 	val.uobj.jump(-1)
-	jp_list = []
+	tmp_strand = []
+	tmp_dangling = []
+	tmp_roop = []
+	tmp_jp_pair =[]
+	strand = []
+	dangling = []
+	roop = []
+	jp_pair =[]
+	N_strand = N_dangling = N_roop = N_jp_pair = 0
 	#
 	mols = val.uobj.get("Set_of_Molecules.molecule[]")
-	for i, mol in enumerate(mols):
-		for j, atom in enumerate(mol[1]):
-			if atom[1] == 'JP_A' or atom[1] == 'JP_B':
-				jp_list.append([i, j])
-	return jp_list
-
-# 架橋点どうしのペアを作成
-def make_jp_pair(target_jp):
-	molecule = target_jp[0]
-	start_jp = target_jp[1]
-	jp_pair = []
-	strand = []
+	atoms = val.uobj.get("Set_of_Molecules.molecule[].atom[]")
 	bonds = val.uobj.get("Set_of_Molecules.molecule[].bond[]")
-	tmp_bonds = bonds[molecule]
 	#
-	for i, bond in enumerate(tmp_bonds):
-		tmp = []
-		if ((bond[1] == start_jp) or (bond[2] == start_jp)) and (i < len(tmp_bonds) - 1):
-			if bond[1] == start_jp:
-				adj = bond[2]
-			else:
-				adj = bond[1]
-			tmp.append(start_jp)
-			tmp.append(adj)
-			tmp_id = i + 1
-			while tmp_bonds[tmp_id][0] == "bond_Strand":
-				if tmp_bonds[tmp_id][1] == adj:
-					adj = tmp_bonds[tmp_id][2]
-				elif tmp_bonds[tmp_id][2] == adj:
-					adj = tmp_bonds[tmp_id][1]
-				tmp.append(adj)
-				tmp_id += 1
-			#
-			if tmp_bonds[tmp_id][1] == adj:
-				end_jp = tmp_bonds[tmp_id][2]
-			elif tmp_bonds[tmp_id][2] == adj:
-				end_jp = tmp_bonds[tmp_id][1]
-			if len(tmp)>2:
-				tmp.append(end_jp)
-				jp_pair.append([molecule, [start_jp, end_jp]])
-				strand.append([molecule, tmp])
-	return jp_pair, strand
+	prev_mol_atoms = 0
+	for mol, mol_list in enumerate(mols):
+		tmp_atoms = atoms[mol]
+		tmp_jp_list = [i for i in tmp_atoms if i[1] == 'JP_A']
+		jp_list = np.array(tmp_jp_list).T.tolist()[0]
+		mod_jp_list = [x-prev_mol_atoms for x in jp_list]
+		# JP毎にストランドを数え上げる
+		for target_jp in mod_jp_list:
+			print(f'\rmol=', mol, "/", len(mols), ', jp=', mod_jp_list.index(target_jp), "/", len(mod_jp_list), "   ", end="")
+			tmp_bonds = bonds[mol]
+			for select in [[1,2], [2,1]]:
+				targetlist = [i for i in tmp_bonds if i[select[0]] == target_jp]
+				if targetlist != []:
+					for each in targetlist:
+						next = each[select[1]]
+						reduced_bonds = [i for i in tmp_bonds if i != each]
+						chain = [target_jp, next]
+						while next>=0:
+							next, reduced_bonds = find_next(next, reduced_bonds)
+							if next != -1:
+								chain.append(next)
+								if next in mod_jp_list:
+									break
+						# chainの分類
+						if chain[0] in mod_jp_list and chain[-1] in mod_jp_list:
+							if chain[0] != chain[-1]:
+								tmp_strand.append(chain)
+								tmp_jp_pair.append([chain[0], chain[-1]])
+							else:
+								tmp_roop.append(chain)
+						else:
+							tmp_dangling.append(chain)
+		# 重複を除く
+		strand.append([mol, remove_duplicate(tmp_strand)])
+		N_strand += len(strand[-1][1])
+		dangling.append([mol, remove_duplicate(tmp_dangling)])
+		N_dangling += len(dangling[-1][1])
+		roop.append([mol, remove_duplicate(tmp_roop)])
+		N_roop += len(roop[-1][1])
+		jp_pair.append([mol, remove_duplicate(tmp_jp_pair)])
+		N_jp_pair += len(jp_pair[-1][1])
+		# 2つ目以降のmoleculeのatom数を調整
+		prev_mol_atoms = len(tmp_atoms)
+	print()
+	print("N_strand=", N_strand, ", N_Dangling=", N_dangling, ", N_Roop=", N_roop, ", N_JP_Pair=", N_jp_pair)
+	return strand, dangling, roop, jp_pair
 
+# 隣接するアトムを探す
+def find_next(target, bond_list):
+	reduced_bond = bond_list
+	next = target
+	for select in [[1,2], [2,1]]:
+		adj_list = [i for i in bond_list if i[select[0]] == target]
+		if adj_list != []:
+			next = adj_list[0][select[1]]
+			reduced_bond = [i for i in bond_list if i != adj_list[0]]
+			break
+	if next == target:
+		next = -1
+	return next, reduced_bond
+
+# 重複を除く
+def remove_duplicate(list):
+	seen = []
+	tmp = [x for x in list if sorted(x) not in seen and not seen.append(sorted(x))]
+	return tmp
 ###############################################################################
 # ポリマー鎖関連の特性情報を計算
 ###############################################################################
@@ -155,17 +177,21 @@ def eval_chain():
 		calc_gk()
 	return
 
+#
 def make_chains():
 	chains = []
 	for chain in val.chain_list:
 		mol = chain[0]
-		tmp = []
-		for atom in range(val.chain_len):
-			segment = val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][atom]])
-			tmp.append(segment)
-		chains.append(tmp)
+		for each in chain[1]:
+			tmp = []
+			for atom in each:
+				# print(mol, each, atom)
+				segment = val.uobj.get("Structure.Position.mol[].atom[]", [mol, atom])
+				tmp.append(segment)
+			chains.append(tmp)
 	return chains
 
+#
 def make_r2_ij(chains):
 	bound_setup()
 	CU.setCell(tuple(val.uobj.get("Structure.Unit_Cell.Cell_Size")))

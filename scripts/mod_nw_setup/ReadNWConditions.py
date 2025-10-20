@@ -123,6 +123,7 @@ SimulationCond:{
 		f.write(contents)
 	return
 
+
 #######################################
 # # Read udf and setup initial conditions
 def read_and_setcondition():

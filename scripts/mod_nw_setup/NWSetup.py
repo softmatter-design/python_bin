@@ -321,15 +321,21 @@ def calc_single_strand_reg(jp_id_dic, sub_id, bond_id, b_xyz, se_xyz):
 	for seg in range(var.n_segments):
 		pos = tuple(start_xyz + vec*(seg + 1)/(var.n_segments + 1.))
 		tmp_xyz[sub_id] = pos
-
-		if seg == 0 or seg == var.n_segments - 1:
-			tmp_atom_sc.append([sub_id, 1, 1])
-		else:
+		# 
+		if (seg == var.n_spacer or seg == var.n_spacer+1) or (seg == var.n_segments-var.n_spacer-2 or seg == var.n_segments-var.n_spacer-1):
 			tmp_atom_sc.append([sub_id, 2, 2])
+		elif seg == int(var.n_segments/2)-1 or seg == int(var.n_segments/2):
+			tmp_atom_sc.append([sub_id, 3, 3])
+		else:
+			tmp_atom_sc.append([sub_id, 1, 1])
 		e_id = sub_id
 		#
 		if seg == 0:
 			bond = 0
+		elif seg == var.n_spacer+1 or seg == var.n_segments-var.n_spacer-1:
+			bond = 2
+		elif seg == int(var.n_segments/2):
+			bond = 3
 		else:
 			bond = 1
 		tmp_bond[bond_id] = tuple([bond, [s_id, e_id]])
@@ -342,10 +348,10 @@ def calc_single_strand_reg(jp_id_dic, sub_id, bond_id, b_xyz, se_xyz):
 			sc_s_id = s_id
 			for i in range(var.n_sc):
 				tmp_xyz[sub_id] = tuple(np.array(pos)  +  (i + 1)*mod_o_vec*unit_len)
-				tmp_atom_sc.append([sub_id, 2, 1])
+				tmp_atom_sc.append([sub_id, 1, 1])
 				sc_e_id = sub_id
 				#
-				bond = 2
+				bond = 1
 				tmp_bond[bond_id] = tuple([bond, [sc_s_id, sc_e_id]])
 				sc_s_id = sc_e_id
 				sub_id += 1
@@ -938,14 +944,21 @@ def calc_single_strand_rnd(start_id, end_id, vector, start_xyz, end_xyz, seq_ato
 		#
 		pos = tuple(start_xyz + vector*(seg + 1)*unit_len)
 		tmp_xyz[seq_atom_id] = pos
-		if seg == 0 or seg == var.n_segments - 1:
-			tmp_atom_st.append([seq_atom_id, 1, 1])
-		else:
+		#
+		if (seg == var.n_spacer or seg == var.n_spacer+1) or (seg == var.n_segments-var.n_spacer-2 or seg == var.n_segments-var.n_spacer-1):
 			tmp_atom_st.append([seq_atom_id, 2, 2])
+		elif seg == int(var.n_segments/2)-1 or seg == int(var.n_segments/2):
+			tmp_atom_st.append([seq_atom_id, 3, 3])
+		else:
+			tmp_atom_st.append([seq_atom_id, 1, 1])
 		e_id = seq_atom_id
 		#
 		if seg == 0:
 			bond = 0
+		elif seg == 3 or seg == var.n_segments-3:
+			bond = 2
+		elif seg == int(var.n_segments/2):
+			bond = 3
 		else:
 			bond = 1
 		tmp_bond[bond_id] = tuple([bond, [s_id, e_id]])
@@ -958,7 +971,7 @@ def calc_single_strand_rnd(start_id, end_id, vector, start_xyz, end_xyz, seq_ato
 			sc_s_id = s_id
 			for i in range(var.n_sc):
 				tmp_xyz[seq_atom_id] = tuple(np.array(pos)  +  (i + 1)*mod_o_vec*unit_len)
-				tmp_atom_st.append([seq_atom_id, 2, 1])
+				tmp_atom_st.append([seq_atom_id, 1, 1])
 				sc_e_id = seq_atom_id
 				#
 				bond = 2

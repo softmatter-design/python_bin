@@ -60,25 +60,26 @@ target_name = ''
 
 # Cognac用の名称設定
 nw_name = "Network"
-atom_name = ["JP_A", "End_A", "Strand_A", "Side_A", "Solvent"]
-bond_name = ["bond_JP-Chn", "bond_Strand", "bond_Side"]
+atom_name = ["JP_A", "Strand_A", "Dis_D", "Dis_S"]
+bond_name = ["bond_JP-Chn", "bond_Strand", "bond_DD", "bond_DS"]
 angle_name = ["angle_AAA"]
-site_name = ["site_JP", "site_End", "site_Strand", "site_Solvent"]
-pair_name = ["site_JP-site_JP", "site_Strand-site_JP", "site_Strand-site_Strand", 
-                "site_JP-site_End", "site_Strand-site_End", "site_End-site_End",
-                "site_Solvent-site_Solvent", "site_Solvent-site_JP", "site_Solvent-site_End",
-                "site_Solvent-site_Strand"]
+site_name = ["site_JP", "site_Strand", "site_Dis_D", "site_Dis_S"]
+pair_name = ["site_JP-site_JP", "site_JP-site_Strand", "site_JP-site_Dis_D", "site_JP-site_Dis_S",
+            "site_Strand-site_Strand", "site_Strand-site_Dis_D", "site_Strand-site_Dis_S",
+            "site_Dis_D-site_Dis_D", "site_Dis_D-site_Dis_S",
+            "site_Dis_S-site_Dis_S"
+            ]
 site_pair_name = [ 
                 ["site_JP", "site_JP"], 
-                ["site_Strand", "site_JP"], 
+                ["site_JP","site_Strand"], 
+                ["site_JP", "site_Dis_D"], 
+                ["site_JP", "site_Dis_S"], 
                 ["site_Strand", "site_Strand"],
-                ["site_JP", "site_End"], 
-                ["site_Strand", "site_End"], 
-                ["site_End", "site_End"],
-                ["site_Solvent", "site_Solvent"],
-                ["site_Solvent", "site_JP"],
-                ["site_Solvent", "site_End"],
-                ["site_Solvent", "site_Strand"],
+                ["site_Strand", "site_Dis_D"], 
+                ["site_Strand", "site_Dis_S"], 
+                ["site_Dis_D", "site_Dis_D"], 
+                ["site_Dis_D", "site_Dis_S"], 
+                ["site_Dis_S", "site_Dis_S"]
                 ]
 # Set [R0, K]
 harmonic = [0.97, 1000]
@@ -86,3 +87,6 @@ harmonic = [0.97, 1000]
 angle = ['Theta2', 74, 10.0]
 # [Cutoff, Scale_1_4_Pair, sigma, epsilon, range]
 lj_cond = [2**(1/6), 1.0, 1.0, 1.0, 1.0]	
+
+# Condition for Dissociative Bond
+n_spacer = 2
