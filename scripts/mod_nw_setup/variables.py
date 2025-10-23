@@ -36,6 +36,18 @@ equilib_time = []
 greenkubo = ''
 greenkubo_repeat = 1
 greenkubo_time = []
+
+exchange=''
+exchange_repeat=1
+exchange_target=''
+exchange_sci_len=1.0
+exchange_int=10
+exchange_prob=1.0
+exchange_thr=1.0
+exchange_time=[]
+
+equilib2_repeat = 1
+equilib2_time = []
 calc = ''
 
 # mod_cond = [n_chains, n_beads_unit, e2e, org_unitcell]

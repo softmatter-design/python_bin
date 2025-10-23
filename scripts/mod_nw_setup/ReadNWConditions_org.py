@@ -34,8 +34,6 @@ def findudf():
 # make new udf when not found.
 def makenewudf():
 	contents = '''
-
-
 	\\begin{def}
 		CalcCond:{
 			Cognac_ver:select{"cognac112"} "使用する Cognac のバージョン",
@@ -66,19 +64,16 @@ def makenewudf():
 					Set:{Multiplicity: int} "多重度を設定",
 					Calc:{TargetDensity:float} "多重度を自動設定した場合の密度を設定 \\n設定した密度になるように多重度を設定"
 				} "多重度設定に関する設定"
-			Shrinkage:{
-				Shrink:select{"Yes", "No"} "ストランドを自然長から圧縮するかどうかのフラッグ \\n非圧縮時には、多重度に応じて密度が変化",
-					Yes:{Control:select{"Density", "Shrink"} "圧縮する場合に、密度コントロールにするか、圧縮率を決めるかを設定", 
-						Density:{target_density: float} "目標とする密度を設定", 
-						Shrinkage:{value: float} "ストランドの圧縮比率を設定"
-						}
-					} "ストランドを自然長から圧縮するかどうかを設定"
+			Shrinkage:{Shrink:select{"Yes", "No"} "ストランドを自然長から圧縮するかどうかのフラッグ \\n非圧縮時には、多重度に応じて密度が変化",
+				Yes:{Control:select{"Density", "Shrink"} "圧縮する場合に、密度コントロールにするか、圧縮率を決めるかを設定", 
+				Density:{target_density: float} "目標とする密度を設定", 
+				Shrinkage:{value: float} "ストランドの圧縮比率を設定"
+				}
+				} "ストランドを自然長から圧縮するかどうかを設定"
 			Entanglement:{
 				Type:select{"Entangled", "NO_Entangled"} "ネットワーク・トポロジーを選択",
-					Entangled:{
-					Step_rfc[]: float "Slow Push Off での rfc 条件",
-						Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
-						} "密度、末端間距離を設定値に合わせるように多重度を自動設定。\\n絡み合いが入るように初期化",
+					Entangled:{Step_rfc[]: float "Slow Push Off での rfc 条件",
+						Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"} "密度、末端間距離を設定値に合わせるように多重度を自動設定。\\n絡み合いが入るように初期化",
 					NO_Entangled:{
 						ExpansionRatio: float "NPT 計算での初期膨張率", 
 						StepPress[]: float "NPT 計算での圧力変化",
@@ -90,7 +85,7 @@ def makenewudf():
 			Equilib_Condition:{
 					Repeat: int "平衡化計算の繰り返し数",
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
-				} "平衡化計算の時間条件を入力"
+				} "平衡化計算の時間条件を入力",
 			GreenKubo:{
 				Calc:select{"Yes", "No"},
 				Yes:{
@@ -98,41 +93,30 @@ def makenewudf():
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
 					} "GreenKubo により、応力緩和関数を計算するかどうかを決める。"
 				}
-			Exchange:{
-				Calc:select{"Yes", "No"},
-				Yes:{
-					Repeat:int "計算の繰り返し数",
-					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
-					Scission_length: double "切断距離",
-					Creation_type:{Interval: int, Probability: double, Threshold: double},
-					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
-					} "結合交換反応の条件を設定"
-				}
 			l_bond: float "シミュレーションでのボンドの自然長"
 			} "シミュレーションの条件を設定"
 	\end{def}
 
 	\\begin{data}
 		CalcCond:{"cognac112",1}
-		TargetCond:{
-			{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_trials_100_sampling"}100}}
-			{20, 0, 3}
-			{"KG"}
-			{"Set", {1}{0.85}}
-			{"No", {"Density", {0.85}{1.0}}}
-			{"NO_Entangled",
-				{[1.073,1.0,0.9,0.8], {1.0e-02,300000,2000}},
-				{2.0, [0.2,0.5,1.0,2.0,3.0,4.5], {1.0e-02,300000,2000}}
-				}
-			}
-		SimulationCond:{
-			{3,{1.0e-02,1000000,10000}}
-			{"No",{5,{1.0e-02,1000000,10000}}}
-			{"Yes",{3,"single", 1.12, {1,1.0,1.2},{.5e-03,20000,100}}}
-			0.97
-			}
+TargetCond:{
+	{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_trials_100_sampling"}100}}
+	{20, 0, 3}
+	{"KG"}
+	{"Set", {1}{0.85}}
+	{"No", {"Density", {0.85}{1.0}}}
+	{"NO_Entangled",
+		{[1.073,1.0,0.9,0.8], {1.0e-02,300000,2000}},
+		{2.0, [0.2,0.5,1.0,2.0,3.0,4.5], {1.0e-02,300000,2000}}
+		}
+	}
+SimulationCond:{
+	{4,{1.0e-02,1000000,10000}}
+	{"Yes",{5,{1.0e-02,1000000,10000}}}
+	0.97
+	}
 
-	\end{data}
+\end{data}
 	'''
 	###
 	with codecs.open('./NW_setup.udf', 'w', 'utf_8') as f:
@@ -264,23 +248,6 @@ def readconditionudf():
 	if var.greenkubo == 'Yes':
 		var.greenkubo_repeat = u.get('SimulationCond.GreenKubo.Yes.Repeat')
 		var.greenkubo_time = u.get('SimulationCond.GreenKubo.Yes.Time')
-	#####
-	var.exchange=u.get('SimulationCond.Exchange.Calc')
-	var.exchange_repeat=1
-	var.exchange_target='single'
-	var.exchange_sci_len=1.0
-	var.exchange_int=10
-	var.exchange_prob=1.0
-	var.exchange_thr=1.0
-	var.exchange_time=[]
-	if var.exchange=='Yes':
-		var.exchange_repeat=u.get('SimulationCond.Exchange.Yes.Repeat')
-		var.exchange_target=u.get('SimulationCond.Exchange.Yes.Target')
-		var.exchange_sci_len=u.get('SimulationCond.Exchange.Yes.Scission_length')
-		var.exchange_int=u.get('SimulationCond.Exchange.Yes.Creation_type.Interval')
-		var.exchange_prob=u.get('SimulationCond.Exchange.Yes.Creation_type.Probability')
-		var.exchange_thr=u.get('SimulationCond.Exchange.Yes.Creation_type.Threshold')
-		var.exchange_time=u.get('SimulationCond.Exchange.Yes.Time')
 	#####
 	var.l_bond = u.get('SimulationCond.l_bond')
 	#####
@@ -458,19 +425,8 @@ def init_calc():
 	text += "平衡化計算繰り返し:\t\t" + str(var.equilib_repeat) + "\n"
 	text += "平衡化時間条件:\t\t" + str(var.equilib_time ) + "\n"
 	if var.greenkubo == 'Yes':
-		text += "#\n応力緩和計算繰り返し:\t\t" + str(var.greenkubo_repeat) + "\n"
+		text += "応力緩和計算繰り返し:\t\t" + str(var.greenkubo_repeat) + "\n"
 		text += "応力緩和時間条件:\t" + str(var.greenkubo_time) + "\n"
-	#
-	if var.exchange=='Yes':
-		text += "#\n結合交換繰り返し:\t\t" + str(var.exchange_repeat) + "\n"
-		text += "結合交換対象ボンド:\t\t" + str(var.exchange_target) + "\n"
-		text += "結合切断距離:\t\t\t" + str(var.exchange_sci_len) + "\n"
-		text += "結合生成インターバル:\t\t" + str(var.exchange_int) + "\n"
-		text += "結合生成確率:\t\t\t" + str(var.exchange_prob) + "\n"
-		text += "結合生成距離:\t\t\t" + str(var.exchange_thr) + "\n"
-		text += "結合交換計算時間:\t\t" + str(var.exchange_time) + "\n"
-
-
 	text += "#########################################" + "\n"
 	text += "ストランドの数密度:\t\t" + str(round(var.nu, 5)) + "\n"
 	text += "#########################################" + "\n"

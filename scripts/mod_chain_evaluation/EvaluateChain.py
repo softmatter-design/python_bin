@@ -29,6 +29,11 @@ def evaluate_nw():
 	# 計算結果を出力
 	make_output()
 	return
+#
+def evaluate_exc():
+	file_select()
+	result = eval_exc_strand()
+	return
 ################################################################################
 # ネットワークからそれぞれのストランドに対応するポリマー鎖を抽出
 ################################################################################
@@ -69,15 +74,17 @@ def read_all():
 		val.cn = cond_u.get('TargetCond.Strand.Characteristic_Ratio')
 		val.nu = cond_u.get('TargetCond.System.Nu')
 	# ネットワークストランドのリストを作成
-	strand, dangling, roop, jp_pair = make_chain_list()
+	strand, dangling, roop, jp_pair = make_chain_list(0)
 	val.chain_list = strand
 	val.chain_len = len(strand[0][1][0])
-	# print(val.chain_len)
 	return
 
 # 架橋点およびストランドの構成アトムのリスト
-def make_chain_list():
-	val.uobj.jump(-1)
+def make_chain_list(record):
+	if record != 0:
+		val.uobj.jump(record)
+	else:
+		val.uobj.jump(-1)
 	tmp_strand = []
 	tmp_dangling = []
 	tmp_roop = []
@@ -163,11 +170,11 @@ def remove_duplicate(list):
 ###############################################################################
 def eval_chain():
 	rec_size = val.uobj.totalRecord()
-	for val.record in range(1, rec_size):
-		print("Reading Rec=", val.record, '/', rec_size - 1)
-		val.uobj.jump(val.record)
+	for record in range(1, rec_size):
+		print("Reading Rec=", record, '/', rec_size - 1)
+		val.uobj.jump(record)
 		chains = make_chains()
-		make_r2_ij(chains)
+		make_r2_ij(chains, record)
 		# read_chain()
 
 	# 鎖に沿ったセグメント間距離の平均を計算
@@ -176,6 +183,24 @@ def eval_chain():
 	if val.target.split('_')[0] == 'GK':
 		calc_gk()
 	return
+
+def eval_exc_strand():
+	result=[]
+	rec_size = val.uobj.totalRecord()
+	for record in range(1, rec_size):
+		print("Reading Rec=", record, '/', rec_size - 1)
+		strand, dangling, roop, jp_pair = make_chain_list(record)
+		n_strand=0
+		for each in strand:
+			n_strand+=len(each[1])
+		n_dangling=0
+		for each in dangling:
+			n_dangling+=len(each[1])
+		n_roop=0
+		for each in roop:
+			n_roop+=len(each[1])
+		result.append([record, [n_strand, n_dangling, n_roop]])
+	return result
 
 #
 def make_chains():
@@ -192,7 +217,7 @@ def make_chains():
 	return chains
 
 #
-def make_r2_ij(chains):
+def make_r2_ij(chains, record):
 	bound_setup()
 	CU.setCell(tuple(val.uobj.get("Structure.Unit_Cell.Cell_Size")))
 	# ステップの数に対応した空リストを作成
@@ -223,7 +248,7 @@ def make_r2_ij(chains):
 		cn.append([i, np.average(np.array(r2_ij[i]))/(i*val.l_bond**2)])
 	val.cn_list.append(cn)
 
-	ba = CognacBasicAnalysis(val.target, val.record)	
+	ba = CognacBasicAnalysis(val.target, record)	
 	# angle
 	anglename = val.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
 	tmp = np.array(ba.angle(anglename[0]))
