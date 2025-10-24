@@ -103,7 +103,10 @@ def make_chain_list(record):
 	for mol, mol_list in enumerate(mols):
 		tmp_atoms = atoms[mol]
 		tmp_jp_list = [i for i in tmp_atoms if i[1] == 'JP_A']
-		jp_list = np.array(tmp_jp_list).T.tolist()[0]
+		# print(tmp_jp_list)
+		jp_list = []
+		for line in tmp_jp_list:
+			jp_list.append(line[0])
 		mod_jp_list = [x-prev_mol_atoms for x in jp_list]
 		# JP毎にストランドを数え上げる
 		for target_jp in mod_jp_list:
