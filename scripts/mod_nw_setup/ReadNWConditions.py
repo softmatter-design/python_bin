@@ -108,7 +108,7 @@ def makenewudf():
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
 					} "結合交換反応の条件を設定"
 				}
-			2nd_Equilib_Condition:{
+			Equilib_Condition_2:{
 					Repeat: int "平衡化計算の繰り返し数",
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
 				} "平衡化計算の時間条件を入力"
@@ -119,12 +119,12 @@ def makenewudf():
 	\\begin{data}
 		CalcCond:{"cognac112",1}
 		TargetCond:{
-			{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_trials_100_sampling"}100}}
+			{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_sampling_100_trials_10_times"}100}}
 			{20, 0, 3}
 			{"KG"}
 			{"Set", {3}{0.85}}
 			{"Yes", {"Density", {0.85}{1.0}}}
-			{"NO_Entangled",
+			{"Entangled",
 				{[1.073,1.0,0.9,0.8], {1.0e-02,300000,2000}},
 				{2.0, [0.2,0.5,1.0,2.0,3.0,4.5], {1.0e-02,300000,2000}}
 				}
@@ -287,8 +287,8 @@ def readconditionudf():
 		var.exchange_thr=u.get('SimulationCond.Exchange.Yes.Creation_type.Threshold')
 		var.exchange_time=u.get('SimulationCond.Exchange.Yes.Time')
 		#
-		var.equilib2_repeat = u.get('SimulationCond.2nd_Equilib_Condition.Repeat')
-		var.equilib2_time = u.get('SimulationCond.2nd_Equilib_Condition.Time')
+		var.equilib2_repeat = u.get('SimulationCond.Equilib_Condition_2.Repeat')
+		var.equilib2_time = u.get('SimulationCond.Equilib_Condition_2.Time')
 	#####
 	var.l_bond = u.get('SimulationCond.l_bond')
 	#####
