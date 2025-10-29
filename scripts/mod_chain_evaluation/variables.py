@@ -31,6 +31,7 @@ gr_list = []
 cn_list = []
 cn_ave = []
 cn_part = []
+exchange_list = []
 #
 base_name = ''
 target_dir = ''

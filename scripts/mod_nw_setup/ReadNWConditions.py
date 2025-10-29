@@ -108,6 +108,10 @@ def makenewudf():
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
 					} "結合交換反応の条件を設定"
 				}
+			2nd_Equilib_Condition:{
+					Repeat: int "平衡化計算の繰り返し数",
+					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
+				} "平衡化計算の時間条件を入力"
 			l_bond: float "シミュレーションでのボンドの自然長"
 			} "シミュレーションの条件を設定"
 	\end{def}
@@ -118,8 +122,8 @@ def makenewudf():
 			{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_trials_100_sampling"}100}}
 			{20, 0, 3}
 			{"KG"}
-			{"Set", {1}{0.85}}
-			{"No", {"Density", {0.85}{1.0}}}
+			{"Set", {3}{0.85}}
+			{"Yes", {"Density", {0.85}{1.0}}}
 			{"NO_Entangled",
 				{[1.073,1.0,0.9,0.8], {1.0e-02,300000,2000}},
 				{2.0, [0.2,0.5,1.0,2.0,3.0,4.5], {1.0e-02,300000,2000}}
@@ -128,7 +132,8 @@ def makenewudf():
 		SimulationCond:{
 			{3,{1.0e-02,1000000,10000}}
 			{"No",{5,{1.0e-02,1000000,10000}}}
-			{"Yes",{3,"single", 1.12, {1,1.0,1.2},{5e-03,20000,100}}}
+			{"Yes",{3,"single", 1.18, {1,1.0,1.2},{1e-03,2000000,10000}}}
+			{3,{1.0e-03,1000000,10000}}
 			0.97
 			}
 
@@ -281,6 +286,9 @@ def readconditionudf():
 		var.exchange_prob=u.get('SimulationCond.Exchange.Yes.Creation_type.Probability')
 		var.exchange_thr=u.get('SimulationCond.Exchange.Yes.Creation_type.Threshold')
 		var.exchange_time=u.get('SimulationCond.Exchange.Yes.Time')
+		#
+		var.equilib2_repeat = u.get('SimulationCond.2nd_Equilib_Condition.Repeat')
+		var.equilib2_time = u.get('SimulationCond.2nd_Equilib_Condition.Time')
 	#####
 	var.l_bond = u.get('SimulationCond.l_bond')
 	#####
@@ -469,7 +477,9 @@ def init_calc():
 		text += "結合生成確率:\t\t\t" + str(var.exchange_prob) + "\n"
 		text += "結合生成距離:\t\t\t" + str(var.exchange_thr) + "\n"
 		text += "結合交換計算時間:\t\t" + str(var.exchange_time) + "\n"
-
+		text += "##" + "\n"
+		text += "2nd_平衡化計算繰り返し:\t\t" + str(var.equilib2_repeat) + "\n"
+		text += "2nd_平衡化時間条件:\t\t" + str(var.equilib2_time ) + "\n"
 
 	text += "#########################################" + "\n"
 	text += "ストランドの数密度:\t\t" + str(round(var.nu, 5)) + "\n"

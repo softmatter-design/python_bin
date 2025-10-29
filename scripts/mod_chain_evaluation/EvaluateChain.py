@@ -17,7 +17,7 @@ import CognacUtility as CU
 from CognacBasicAnalysis import *
 from CognacGeometryAnalysis import CognacGeometryAnalysis
 #
-from mod_chain_evaluation import variables as val
+from mod_chain_evaluation import variables as var
 ################################################################################
 # MAIN
 ################################################################################
@@ -32,7 +32,8 @@ def evaluate_nw():
 #
 def evaluate_exc():
 	file_select()
-	result = eval_exc_strand()
+	var.exchange_list = eval_exc_strand()
+	make_exc_output()
 	return
 ################################################################################
 # ネットワークからそれぞれのストランドに対応するポリマー鎖を抽出
@@ -54,9 +55,9 @@ def file_select():
 		print('Target file of ', param[1], "is not exist here.")
 		exit(1)
 	else:
-		val.target = param[1]
-		val.target_name = val.target.split('.')[0]
-		val.uobj = UDFManager(val.target)
+		var.target = param[1]
+		var.target_name = var.target.split('.')[0]
+		var.uobj = UDFManager(var.target)
 	return
 
 # 計算条件から、ホモポリマーとネットワークを判断し、chain_list を読み出す。
@@ -67,43 +68,42 @@ def read_all():
 		exit(1)
 	else:
 		cond_u = UDFManager('target_condition.udf')
-		val.nw_type = cond_u.get('TargetCond.Model.TargetModel')
-		val.func = cond_u.get('TargetCond.NetWork.N_Strands')
-		val.n_seg = cond_u.get('TargetCond.NetWork.N_Segments')
-		val.l_bond= cond_u.get('SimulationCond.l_bond')
-		val.cn = cond_u.get('TargetCond.Strand.Characteristic_Ratio')
-		val.nu = cond_u.get('TargetCond.System.Nu')
+		var.nw_type = cond_u.get('TargetCond.Model.TargetModel')
+		var.func = cond_u.get('TargetCond.NetWork.N_Strands')
+		var.n_seg = cond_u.get('TargetCond.NetWork.N_Segments')
+		var.l_bond= cond_u.get('SimulationCond.l_bond')
+		var.cn = cond_u.get('TargetCond.Strand.Characteristic_Ratio')
+		var.nu = cond_u.get('TargetCond.System.Nu')
 	# ネットワークストランドのリストを作成
 	strand, dangling, roop, jp_pair = make_chain_list(0)
-	val.chain_list = strand
-	val.chain_len = len(strand[0][1][0])
+	var.chain_list = strand
+	var.chain_len = len(strand[0][1][0])
 	return
 
 # 架橋点およびストランドの構成アトムのリスト
 def make_chain_list(record):
 	if record != 0:
-		val.uobj.jump(record)
+		var.uobj.jump(record)
 	else:
-		val.uobj.jump(-1)
-	tmp_strand = []
-	tmp_dangling = []
-	tmp_roop = []
-	tmp_jp_pair =[]
+		var.uobj.jump(-1)
 	strand = []
 	dangling = []
 	roop = []
 	jp_pair =[]
 	N_strand = N_dangling = N_roop = N_jp_pair = 0
 	#
-	mols = val.uobj.get("Set_of_Molecules.molecule[]")
-	atoms = val.uobj.get("Set_of_Molecules.molecule[].atom[]")
-	bonds = val.uobj.get("Set_of_Molecules.molecule[].bond[]")
+	mols = var.uobj.get("Set_of_Molecules.molecule[]")
+	atoms = var.uobj.get("Set_of_Molecules.molecule[].atom[]")
+	bonds = var.uobj.get("Set_of_Molecules.molecule[].bond[]")
 	#
 	prev_mol_atoms = 0
 	for mol, mol_list in enumerate(mols):
+		tmp_strand = []
+		tmp_dangling = []
+		tmp_roop = []
+		tmp_jp_pair =[]
 		tmp_atoms = atoms[mol]
 		tmp_jp_list = [i for i in tmp_atoms if i[1] == 'JP_A']
-		# print(tmp_jp_list)
 		jp_list = []
 		for line in tmp_jp_list:
 			jp_list.append(line[0])
@@ -135,6 +135,7 @@ def make_chain_list(record):
 						else:
 							tmp_dangling.append(chain)
 		# 重複を除く
+		# print(len(tmp_strand), len(tmp_jp_pair))
 		strand.append([mol, remove_duplicate(tmp_strand)])
 		N_strand += len(strand[-1][1])
 		dangling.append([mol, remove_duplicate(tmp_dangling)])
@@ -150,14 +151,14 @@ def make_chain_list(record):
 	return strand, dangling, roop, jp_pair
 
 # 隣接するアトムを探す
-def find_next(target, bond_list):
-	reduced_bond = bond_list
+def find_next(target, tmp_bond_list):
+	reduced_bond = tmp_bond_list
 	next = target
 	for select in [[1,2], [2,1]]:
-		adj_list = [i for i in bond_list if i[select[0]] == target]
+		adj_list = [i for i in tmp_bond_list if i[select[0]] == target]
 		if adj_list != []:
 			next = adj_list[0][select[1]]
-			reduced_bond = [i for i in bond_list if i != adj_list[0]]
+			reduced_bond = [i for i in tmp_bond_list if i != adj_list[0]]
 			break
 	if next == target:
 		next = -1
@@ -167,15 +168,26 @@ def find_next(target, bond_list):
 def remove_duplicate(list):
 	seen = []
 	tmp = [x for x in list if sorted(x) not in seen and not seen.append(sorted(x))]
+
+	# count=0
+	# tmp=[]
+	# for x in list:
+	# 	print(x)
+	# 	if sorted(x) not in seen:
+	# 		seen.append(sorted(x))
+	# 		tmp.append(x)
+	# 		count+=1
+	# 		print(count, x)
 	return tmp
+
 ###############################################################################
 # ポリマー鎖関連の特性情報を計算
 ###############################################################################
 def eval_chain():
-	rec_size = val.uobj.totalRecord()
+	rec_size = var.uobj.totalRecord()
 	for record in range(1, rec_size):
 		print("Reading Rec=", record, '/', rec_size - 1)
-		val.uobj.jump(record)
+		var.uobj.jump(record)
 		chains = make_chains()
 		make_r2_ij(chains, record)
 		# read_chain()
@@ -183,13 +195,13 @@ def eval_chain():
 	# 鎖に沿ったセグメント間距離の平均を計算
 	calc_cn()
 	#
-	if val.target.split('_')[0] == 'GK':
+	if var.target.split('_')[0] == 'GK':
 		calc_gk()
 	return
 
 def eval_exc_strand():
 	result=[]
-	rec_size = val.uobj.totalRecord()
+	rec_size = var.uobj.totalRecord()
 	for record in range(1, rec_size):
 		print("Reading Rec=", record, '/', rec_size - 1)
 		strand, dangling, roop, jp_pair = make_chain_list(record)
@@ -202,19 +214,19 @@ def eval_exc_strand():
 		n_roop=0
 		for each in roop:
 			n_roop+=len(each[1])
-		result.append([record, [n_strand, n_dangling, n_roop]])
+		result.append([n_strand, n_dangling, n_roop])
 	return result
 
 #
 def make_chains():
 	chains = []
-	for chain in val.chain_list:
+	for chain in var.chain_list:
 		mol = chain[0]
 		for each in chain[1]:
 			tmp = []
 			for atom in each:
 				# print(mol, each, atom)
-				segment = val.uobj.get("Structure.Position.mol[].atom[]", [mol, atom])
+				segment = var.uobj.get("Structure.Position.mol[].atom[]", [mol, atom])
 				tmp.append(segment)
 			chains.append(tmp)
 	return chains
@@ -222,13 +234,13 @@ def make_chains():
 #
 def make_r2_ij(chains, record):
 	bound_setup()
-	CU.setCell(tuple(val.uobj.get("Structure.Unit_Cell.Cell_Size")))
+	CU.setCell(tuple(var.uobj.get("Structure.Unit_Cell.Cell_Size")))
 	# ステップの数に対応した空リストを作成
-	r2_ij = [[] for i in range(val.chain_len)]
+	r2_ij = [[] for i in range(var.chain_len)]
 
 	for chain in chains:
-		for step in range(1, val.chain_len):
-			for start in range(val.chain_len - step):
+		for step in range(1, var.chain_len):
+			for start in range(var.chain_len - step):
 				end1 = tuple(chain[start])
 				end2 = tuple(chain[start + step])
 				e2e_vec =  CU.distanceWithBoundary(end1, end2)
@@ -236,98 +248,111 @@ def make_r2_ij(chains, record):
 				r2 = e2e_dist**2
 				r2_ij[step].append(r2)
 				if step == 1:
-					val.bond_list.append(e2e_dist)
-				if step == val.chain_len -1:
-					val.Rx_list.append(e2e_vec[0])
-					val.Ry_list.append(e2e_vec[1])
-					val.Rz_list.append(e2e_vec[2])
+					if e2e_dist > 2:
+						print(e2e_dist)
+					var.bond_list.append(e2e_dist)
+				if step == var.chain_len -1:
+					var.Rx_list.append(e2e_vec[0])
+					var.Ry_list.append(e2e_vec[1])
+					var.Rz_list.append(e2e_vec[2])
 					#
-					val.R_list.append(e2e_dist)
+					var.R_list.append(e2e_dist)
 	
 	# cn
-	cn = []
-	val.l_bond = np.average(np.array(val.bond_list))
-	for i in range(1, len(r2_ij)):
-		cn.append([i, np.average(np.array(r2_ij[i]))/(i*val.l_bond**2)])
-	val.cn_list.append(cn)
+	# print(var.chain_len)
+	# print(len(r2_ij))
+	# for i, line in enumerate(r2_ij):
+	# 	if i>10:
+	# 		print(i)
+	# 		print(line[0:5])
+	# 		print(len(line))
 
-	ba = CognacBasicAnalysis(val.target, record)	
+	cn = []
+	# このシミュレーションでの平均ボンド長
+	var.l_bond = np.average(np.array(var.bond_list))
+	for i in range(1, len(r2_ij)):
+		# 伸び切り長さで割り込んで、特性比にする。
+		cn.append([i, np.average(np.array(r2_ij[i]))/(i*var.l_bond**2)])
+	# print(cn)
+	var.cn_list.append(cn)
+
 	# angle
-	anglename = val.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
+	ba = CognacBasicAnalysis(var.target, record)	
+	anglename = var.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
 	tmp = np.array(ba.angle(anglename[0]))
-	val.angle_list.extend(list(tmp[~np.isnan(tmp)]))
+	var.angle_list.extend(list(tmp[~np.isnan(tmp)]))
 	return
 
 # ポリマー鎖関連の特性情報
 # def read_chain():
 # 	# 初期化
 # 	# ステップの数に対応した空リストを作成
-# 	r2_ij = [[] for i in range(val.chain_len)]
-# 	xp = [[] for i in range(val.chain_len)]
+# 	r2_ij = [[] for i in range(var.chain_len)]
+# 	xp = [[] for i in range(var.chain_len)]
 # 	# 
-# 	ba = CognacBasicAnalysis(val.target, val.record)
-# 	for chain in val.chain_list:
+# 	ba = CognacBasicAnalysis(var.target, var.record)
+# 	for chain in var.chain_list:
 # 		mol = chain[0]
 		
-# 		atom = val.uobj.get("Set_of_Molecules.molecule[].atom[]", [mol, chain[1][2]])[1]
+# 		atom = var.uobj.get("Set_of_Molecules.molecule[].atom[]", [mol, chain[1][2]])[1]
 
 # 		#		
-# 		for step in range(1, val.chain_len):
-# 			for start in range(val.chain_len - step):
-# 				end1 = tuple(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][start]]))
-# 				end2 = tuple(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][start + step]]))
+# 		for step in range(1, var.chain_len):
+# 			for start in range(var.chain_len - step):
+# 				end1 = tuple(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][start]]))
+# 				end2 = tuple(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][start + step]]))
 # 				e2e_vec = CU.distanceWithBoundary(end1, end2)
 # 				e2e_dist = np.linalg.norm(np.array(e2e_vec))
 # 				r2 = e2e_dist**2
 # 				r2_ij[step].append(r2)
 # 				if step == 1:
-# 					val.bond_list.append(e2e_dist)
-# 				if step == val.chain_len -1:
-# 					val.Rx_list.append(e2e_vec[0])
-# 					val.Ry_list.append(e2e_vec[1])
-# 					val.Rz_list.append(e2e_vec[2])
+# 					var.bond_list.append(e2e_dist)
+# 				if step == var.chain_len -1:
+# 					var.Rx_list.append(e2e_vec[0])
+# 					var.Ry_list.append(e2e_vec[1])
+# 					var.Rz_list.append(e2e_vec[2])
 # 					#
-# 					val.R_list.append(e2e_dist)
+# 					var.R_list.append(e2e_dist)
 # 					# r2_list.append(r2)
 # 		# gr
-# 		# cg = CognacGeometryAnalysis(val.target, val.record)
-# 		# val.gr_list.append(cg.gr([atom]))
+# 		# cg = CognacGeometryAnalysis(var.target, var.record)
+# 		# var.gr_list.append(cg.gr([atom]))
 		
 # 		# xp
 # 		pos = []
-# 		for i in range(val.chain_len):
-# 			segment = np.array(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][i]]))
+# 		for i in range(var.chain_len):
+# 			segment = np.array(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][i]]))
 # 			pos.append(segment)
-# 		for p in range(val.chain_len):
+# 		for p in range(var.chain_len):
 # 			tmp = np.zeros(3)
-# 			end0 = np.array(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][0]]))
-# 			end1 = np.array(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][val.chain_len - 1]]))
-# 			k = np.pi*p/(val.chain_len-1)
-# 			for i in range(val.chain_len):
-# 				segment = np.array(val.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][i]]))
+# 			end0 = np.array(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][0]]))
+# 			end1 = np.array(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][var.chain_len - 1]]))
+# 			k = np.pi*p/(var.chain_len-1)
+# 			for i in range(var.chain_len):
+# 				segment = np.array(var.uobj.get("Structure.Position.mol[].atom[]", [mol, chain[1][i]]))
 # 				tmp += segment*np.cos(k*i)
-# 			tmp2 = (tmp - (end0 + end1)/2.)/val.chain_len
+# 			tmp2 = (tmp - (end0 + end1)/2.)/var.chain_len
 # 			xp[p].append(tmp2)
 			
 
 # 	xp_ave = []
-# 	for p in range(val.chain_len):
+# 	for p in range(var.chain_len):
 # 		xp_ave.append([p, np.average(np.array(xp[p]), axis = 0)])
 # 		print('cog', ba.Xp(pos, p))
 		
-# 	val.xp_list.append(xp_ave)
-# 	print(val.xp_list)
+# 	var.xp_list.append(xp_ave)
+# 	print(var.xp_list)
 
 		
 # 	# cn
 # 	cn = []
 # 	for i in range(1, len(r2_ij)):
-# 		cn.append([i, np.average(np.array(r2_ij[i]))/(i*val.l_bond**2)])
-# 	val.cn_list.append(cn)
+# 		cn.append([i, np.average(np.array(r2_ij[i]))/(i*var.l_bond**2)])
+# 	var.cn_list.append(cn)
 # 	# angle
-# 	anglename = val.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
+# 	anglename = var.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
 # 	tmp = np.array(ba.angle(anglename[0]))
-# 	val.angle_list.extend(list(tmp[~np.isnan(tmp)]))
+# 	var.angle_list.extend(list(tmp[~np.isnan(tmp)]))
 # 	return
 
 
@@ -342,7 +367,7 @@ def make_r2_ij(chains, record):
 
 # 周期境界条件の設定
 def bound_setup():
-	axis = val.uobj.get("Simulation_Conditions.Boundary_Conditions")
+	axis = var.uobj.get("Simulation_Conditions.Boundary_Conditions")
 	boundarylist = [0,0,0]
 	#
 	for i in range(0,3):
@@ -376,12 +401,12 @@ def bound_setup():
 ###################################################################
 # 鎖に沿ったセグメント間距離の平均を計算
 def calc_cn():
-	l_part = len(val.cn_list)//10
+	l_part = len(var.cn_list)//10
 	# データの分割
 	multi = 0
 	part_cn = []
 	tmp = []
-	for i, part in enumerate(val.cn_list):
+	for i, part in enumerate(var.cn_list):
 		if i < l_part*(multi + 1):
 			tmp.append(part)
 		else:
@@ -391,7 +416,7 @@ def calc_cn():
 			multi += 1
 	# 各パートごとに平均
 	for part in part_cn:
-		tmp = [ [i + 1, 0] for i in range(len(val.cn_list[0]))]
+		tmp = [ [i + 1, 0] for i in range(len(var.cn_list[0]))]
 		count = 0
 		cn_part_ave = []
 		for data in part:
@@ -400,16 +425,16 @@ def calc_cn():
 			count += 1
 		for data in tmp:
 			cn_part_ave.append([data[0], data[1]/count])
-		val.cn_part.append(cn_part_ave)
+		var.cn_part.append(cn_part_ave)
 	# パートごとの平均をさらに平均
-	tmp = [ [i + 1, 0] for i in range(len(val.cn_list[0]))]
+	tmp = [ [i + 1, 0] for i in range(len(var.cn_list[0]))]
 	count = 0
-	for data in val.cn_part:
+	for data in var.cn_part:
 		for i, el in enumerate(data):
 			tmp[i][1] += el[1]
 		count += 1
 	for data in tmp:
-		val.cn_ave.append([data[0], data[1]/count])
+		var.cn_ave.append([data[0], data[1]/count])
 	return
 
 
@@ -436,42 +461,48 @@ def calc_cn():
 def make_output():
 	# 結果をヒストグラムで出力 
 	hist_list = [
-			["bond", val.bond_list, 200, "True", ['bond length', 'Freq.'], 'box'],
-			["angle", val.angle_list, 200, "True", ['angle [deg]', 'Freq.'], 'box'],
-			["Rx", val.Rx_list, 200, "True", ['Rx', 'Freq.'], '' ],
-			["Ry", val.Ry_list, 200, "True", ['Ry', 'Freq.'], '' ],
-			["Rz", val.Rz_list, 200, "True", ['Rz', 'Freq.'], '' ],
-			["R", val.R_list, 200, "True", ['|R|', 'Freq.'], '' ]
+			["bond", var.bond_list, 200, "True", ['bond length', 'Freq.'], 'box'],
+			["angle", var.angle_list, 200, "True", ['angle [deg]', 'Freq.'], 'box'],
+			["Rx", var.Rx_list, 200, "True", ['Rx', 'Freq.'], '' ],
+			["Ry", var.Ry_list, 200, "True", ['Ry', 'Freq.'], '' ],
+			["Rz", var.Rz_list, 200, "True", ['Rz', 'Freq.'], '' ],
+			["R", var.R_list, 200, "True", ['|R|', 'Freq.'], '' ]
 			]
 	for cond in hist_list:
 		make_hist_all(cond)
 	# マルチ形式での出力
 	multi_list = [
-			["gr", val.gr_list, ['Distance', 'g(r)']],
-			["CN", val.cn_list, ['|i-j|', 'C_{|i-j|}']],
-			["CN_part", val.cn_part, ['|i-j|', 'C_{|i-j|}']],
-			["CN_ave", val.cn_ave, ['|i-j|', 'C_{|i-j|}']]
+			["gr", var.gr_list, ['Distance', 'g(r)']],
+			["CN", var.cn_list, ['|i-j|', 'C_{|i-j|}']],
+			["CN_part", var.cn_part, ['|i-j|', 'C_{|i-j|}']],
+			["CN_ave", var.cn_ave, ['|i-j|', 'C_{|i-j|}']]
 			]
 	for cond in multi_list:
 		make_multi(cond)
 	return
 
+# 結合交換の結果を出力
+def make_exc_output():
+	cond = ["Exchange", var.exchange_list, ['record', 'results']]
+	make_multi(cond)
+	return
+
 ##########################
 # ヒストグラムのグラフの作成
 def make_hist_all(cond_list):
-	val.base_name = cond_list[0]
-	val.data_list = cond_list[1]
-	val.n_bins = cond_list[2]
-	val.norm = cond_list[3]
-	val.leg = cond_list[4]
-	val.option = cond_list[5]
-	val.target_dir = os.path.join(val.target_name, val.base_name)
-	val.f_dat = val.base_name + "_hist.dat"
-	val.f_plt = val.base_name + ".plt"
-	val.f_png = val.base_name + ".png"
+	var.base_name = cond_list[0]
+	var.data_list = cond_list[1]
+	var.n_bins = cond_list[2]
+	var.norm = cond_list[3]
+	var.leg = cond_list[4]
+	var.option = cond_list[5]
+	var.target_dir = os.path.join(var.target_name, var.base_name)
+	var.f_dat = var.base_name + "_hist.dat"
+	var.f_plt = var.base_name + ".plt"
+	var.f_png = var.base_name + ".png"
 
 	# ヒストグラムのデータ作成
-	val.bin_width, hist_data = make_hist_data()
+	var.bin_width, hist_data = make_hist_data()
 	# ヒストグラムのデータを書き出し 
 	write_data(hist_data)
 	# グラフを作成
@@ -481,11 +512,11 @@ def make_hist_all(cond_list):
 # ヒストグラムのデータ作成
 def make_hist_data():
 	# ヒストグラムを作成
-	data_weights = np.ones(len(val.data_list))/float(len(val.data_list))
-	if val.norm:
-		value, x = np.histogram(val.data_list, bins = val.n_bins, weights = data_weights)
+	data_weights = np.ones(len(var.data_list))/float(len(var.data_list))
+	if var.norm:
+		value, x = np.histogram(var.data_list, bins = var.n_bins, weights = data_weights)
 	else:
-		value, x = np.histogram(val.data_list, bins = val.n_bins)
+		value, x = np.histogram(var.data_list, bins = var.n_bins)
 	# グラフ用にデータを変更
 	width = (x[1] - x[0])
 	mod_x = (x + width/2)[:-1]
@@ -494,8 +525,8 @@ def make_hist_data():
 
 # ヒストグラムのデータを書き出し 
 def write_data(hist_data):
-	os.makedirs(val.target_dir, exist_ok = True)
-	with open(os.path.join(val.target_dir, val.f_dat), 'w') as f:
+	os.makedirs(var.target_dir, exist_ok = True)
+	with open(os.path.join(var.target_dir, var.f_dat), 'w') as f:
 		f.write("# Histgram data:\n\n")
 		for line in hist_data:
 			f.write(str(line[0]) + '\t' + str(line[1])  + '\n')
@@ -505,17 +536,17 @@ def write_data(hist_data):
 def make_graph():
 	make_script()
 	cwd = os.getcwd()
-	os.chdir(val.target_dir)
+	os.chdir(var.target_dir)
 	if platform.system() == "Windows":
-		subprocess.call(val.f_plt, shell = True)
+		subprocess.call(var.f_plt, shell = True)
 	elif platform.system() == "Linux":
-		subprocess.call('gnuplot ' + val.f_plt, shell = True)
+		subprocess.call('gnuplot ' + var.f_plt, shell = True)
 	os.chdir(cwd)
 	return
 
 # 必要なスクリプトを作成
 def make_script():
-	with open(os.path.join(val.target_dir , val.f_plt), 'w') as f:
+	with open(os.path.join(var.target_dir , var.f_plt), 'w') as f:
 		script = script_content()
 		f.write(script)
 	return
@@ -523,38 +554,38 @@ def make_script():
 # スクリプトの中身
 def script_content():
 	script = 'set term pngcairo font "Arial,14" \nset colorsequence classic \n'
-	script += '# \ndata = "' + val.f_dat + '" \nset output "' + val.f_png + ' "\n'
+	script += '# \ndata = "' + var.f_dat + '" \nset output "' + var.f_png + ' "\n'
 	script += '#\nset size square\n'
-	script += '#\nset xlabel "' + val.leg[0] + '"\nset ylabel "' + val.leg[1] + '"\n\n'
-	if val.base_name == "Rx" or val.base_name == "Ry" or val.base_name == "Rz":
-		script += 'N = ' + str(val.n_seg) + '\n'
-		script += 'bond = ' + str(val.l_bond) + '\n'
-		script += 'CN = ' + str(val.cn) + '\n'
-		script += 'func = ' + str(val.func) + '\n\n'
+	script += '#\nset xlabel "' + var.leg[0] + '"\nset ylabel "' + var.leg[1] + '"\n\n'
+	if var.base_name == "Rx" or var.base_name == "Ry" or var.base_name == "Rz":
+		script += 'N = ' + str(var.n_seg) + '\n'
+		script += 'bond = ' + str(var.l_bond) + '\n'
+		script += 'CN = ' + str(var.cn) + '\n'
+		script += 'func = ' + str(var.func) + '\n\n'
 		script += 'R1 = bond*(CN*(N+1))**0.5\n'
 		script += 'C=0.1\n'
 		script += 'delta=R1\n'
 		script += 'frc = 1.0\n\n'
 		#
-		if val.nw_type == 'Regular' and val.func == 3:
+		if var.nw_type == 'Regular' and var.func == 3:
 			script += 'set xrange [0:]\n#set yrange [0:100]\n'
 			script += 'Pos = R1/2**0.5\n\n'
 			script += 'f(x) = C*(1./2.)*(1./(frc*delta*(3.142*2.)**0.5))*(exp(-1.*((x-Pos)**2)/(2.*(frc*delta)**2)) + exp(-1.*((x+Pos)**2)/(2.*(frc*delta)**2)))\n\n'
 			script += 'fit f(x) data via C, frc\n\n'
 			script += '#\nset label 1 sprintf("frc =%.3f", frc) at graph 0.7, 0.8\n\n'
-		elif val.nw_type == 'Regular' and val.func == 4:
+		elif var.nw_type == 'Regular' and var.func == 4:
 			script += 'set xrange [0:]\n#set yrange [0:100]\n'
 			script += 'Pos = R1/3**0.5\ndelta = Pos*(1. - 2./func)**0.5\n\n'
 			script += 'f(x) = C*(1./2.)*(1./(frc*delta*(3.142*2.)**0.5))*(exp(-1.*((x-Pos)**2)/(2.*(frc*delta)**2)) + exp(-1.*((x+Pos)**2)/(2.*(frc*delta)**2)))\n\n'
 			script += 'fit f(x) data via C, frc\n\n'
 			script += '#\nset label 1 sprintf("frc =%.3f", frc) at graph 0.7, 0.8\n\n'
-		elif val.nw_type == 'Regular' and val.func == 6:
+		elif var.nw_type == 'Regular' and var.func == 6:
 			script += 'set xrange [0:]\n#set yrange [0:100]\n'
 			script += 'Pos = R1\ndelta = Pos*(1. - 2./func)**0.5\n\n'
 			script += 'f(x) = C*(1./2.)*(1./(frc*delta*(3.142*2.)**0.5))*(exp(-1.*((x-Pos)**2)/(2.*(frc*delta)**2)) + exp(-1.*((x+Pos)**2)/(2.*(frc*delta)**2)))\n\n'
 			script += 'fit f(x) data via C, frc\n\n'
 			script += '#\nset label 1 sprintf("frc =%.3f", frc) at graph 0.7, 0.8\n\n'
-		elif val.nw_type == 'Regular' and val.func == 8:
+		elif var.nw_type == 'Regular' and var.func == 8:
 			script += 'set xrange [0:]\n#set yrange [0:100]\n'
 			script += 'Pos = R1/3**0.5\ndelta = Pos*(1. - 2./func)**0.5\n\n'
 			script += 'f(x) = C*(1./2.)*(1./(frc*delta*(3.142*2.)**0.5))*(exp(-1.*((x-Pos)**2)/(2.*(frc*delta)**2)) + exp(-1.*((x+Pos)**2)/(2.*(frc*delta)**2)))\n\n'
@@ -566,38 +597,38 @@ def script_content():
 			script += 'fit f(x) data via C, CN\n\n'
 			script += '#\nset label 1 sprintf("CN =%.3f", CN) at graph 0.7, 0.8\n\n'
 		#
-		script += 'set style fill solid 0.5\nset boxwidth ' + str(val.bin_width) + '\n'
+		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
 		script += '#\nplot data w boxes noti'
 		script += ', \\\n f(x)'
 
-	if val.base_name == "R":
-		script += 'N = ' + str(val.n_seg) + '\n'
-		script += 'bond = ' + str(val.l_bond) + '\n'
-		script += 'CN = ' + str(val.cn) + '\n'
-		script += 'f = ' + str(val.func) + '\n'
+	if var.base_name == "R":
+		script += 'N = ' + str(var.n_seg) + '\n'
+		script += 'bond = ' + str(var.l_bond) + '\n'
+		script += 'CN = ' + str(var.cn) + '\n'
+		script += 'f = ' + str(var.func) + '\n'
 		script += 'Rsq = (N+1)*bond**2\n'
 		script += 'C=0.1\nfrc=1.0\n\n'
 		script += '#f(x) = C*exp(-1.*(x-frc*R1)**2./(2.*sigma**2.))/(2.*pi*sigma**2.)**(1/2)\n\n'
 		script += 'f(x) = C*4.*pi*x**2.*(3./(2.*pi*CN*Rsq))**(3./2.)*exp(-3.*x**2./(2.*CN*Rsq))\n'	
 		script += 'fit f(x) data via C, CN\n\n'
 		script += '#\nset label 1 sprintf("CN=%.3f", CN) at graph 0.7, 0.8\n'
-		script += 'set style fill solid 0.5\nset boxwidth ' + str(val.bin_width) + '\n'
+		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
 		script += '#\nplot data w boxes noti'
 		script += ', \\\n f(x)'
 	#
-	if val.base_name == "angle":
-		if val.option != "box":
+	if var.base_name == "angle":
+		if var.option != "box":
 			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w l noti'
 		else:
-			script += 'set style fill solid 0.5\nset boxwidth ' + str(val.bin_width) + '\n'
+			script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
 			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w boxes noti'
 	#
-	if val.base_name== "bond":
-		script += 'set style fill solid 0.5\nset boxwidth ' + str(val.bin_width) + '\n'
+	if var.base_name== "bond":
+		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
 		script += '#\nplot data w boxes noti'
 	#
-	elif val.option == "box":
-		script += 'set style fill solid 0.5\nset boxwidth ' + str(val.bin_width) + '\n'
+	elif var.option == "box":
+		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
 		script += '#\nplot data w boxes noti'
 		
 	return script
@@ -606,13 +637,13 @@ def script_content():
 ##########################
 # マルチリストのグラフの作成
 def make_multi(cond_list):
-	val.base_name = cond_list[0]
-	val.data_list = cond_list[1]
-	val.leg = cond_list[2]
-	val.target_dir = os.path.join(val.target_name, val.base_name)
-	val.f_dat = val.base_name + "_hist.dat"
-	val.f_plt = val.base_name + ".plt"
-	val.f_png = val.base_name + ".png"
+	var.base_name = cond_list[0]
+	var.data_list = cond_list[1]
+	var.leg = cond_list[2]
+	var.target_dir = os.path.join(var.target_name, var.base_name)
+	var.f_dat = var.base_name + "_hist.dat"
+	var.f_plt = var.base_name + ".plt"
+	var.f_png = var.base_name + ".png"
 
 	# データを書き出し 
 	write_multi_data()
@@ -622,16 +653,22 @@ def make_multi(cond_list):
 
 # データを書き出し 
 def write_multi_data():
-	os.makedirs(val.target_dir, exist_ok=True)
-	with open(os.path.join(val.target_dir, val.f_dat), 'w') as f:
+	os.makedirs(var.target_dir, exist_ok=True)
+	with open(os.path.join(var.target_dir, var.f_dat), 'w') as f:
 		f.write("# data:\n")
-		if val.base_name == 'CN_ave' or val.base_name == 'Corr_stress' or val.base_name == 'Corr_stress_semi' or val.base_name == 'Corr_stress_mod' or val.base_name == 'Corr_stress_all':
-			for line in val.data_list:
+		if var.base_name == 'CN_ave' or var.base_name == 'Corr_stress' or var.base_name == 'Corr_stress_semi' or var.base_name == 'Corr_stress_mod' or var.base_name == 'Corr_stress_all':
+			for line in var.data_list:
+				for data in line:
+					f.write(str(data) + '\t')
+				f.write('\n')
+		elif var.base_name == 'Exchange':
+			for i, line in enumerate(var.data_list):
+				f.write(str(i) + '\t')
 				for data in line:
 					f.write(str(data) + '\t')
 				f.write('\n')
 		else:
-			for i, data in enumerate(val.data_list):
+			for i, data in enumerate(var.data_list):
 				f.write("\n\n# " + str(i) +":\n\n")
 				for line in data:
 					f.write(str(line[0]) + '\t' + str(line[1])  + '\n')
@@ -641,48 +678,48 @@ def write_multi_data():
 def make_multi_graph():
 	make_multi_script()
 	cwd = os.getcwd()
-	os.chdir(val.target_dir)
+	os.chdir(var.target_dir)
 	if platform.system() == "Windows":
-		subprocess.call(val.f_plt, shell=True)
+		subprocess.call(var.f_plt, shell=True)
 	elif platform.system() == "Linux":
-		subprocess.call('gnuplot ' + val.f_plt, shell=True)
+		subprocess.call('gnuplot ' + var.f_plt, shell=True)
 	os.chdir(cwd)
 	return
 
 # 必要なスクリプトを作成
 def make_multi_script():
-	with open(os.path.join(val.target_dir, val.f_plt), 'w') as f:
+	with open(os.path.join(var.target_dir, var.f_plt), 'w') as f:
 		script = multi_script_content()
 		f.write(script)
 	return
 
 # スクリプトの中身
 def multi_script_content():
-	repeat = len(val.data_list )
+	repeat = len(var.data_list )
 	#
 	script = 'set term pngcairo font "Arial,14" \nset colorsequence classic \n'
-	script += '# \ndata = "' + val.f_dat + '" \nset output "' + val.f_png + ' "\n'
+	script += '# \ndata = "' + var.f_dat + '" \nset output "' + var.f_png + ' "\n'
 	script += '#\nset size square\n#set xrange [1:]\n#set yrange [1:]\n'
-	script += '#\nset xlabel "' + val.leg[0] + '"\nset ylabel "' + val.leg[1] + '"\n\n'
+	script += '#\nset xlabel "' + var.leg[0] + '"\nset ylabel "' + var.leg[1] + '"\n\n'
 	#
-	if val.base_name == "CN" or val.base_name == "CN_ave" or val.base_name == "CN_part":
+	if var.base_name == "CN" or var.base_name == "CN_ave" or var.base_name == "CN_part":
 		script += '#\nset xrange [1:]\nset yrange [1:]\n'
 		script += 'set key bottom\n\n'
 		script += 'ct = 0.274\n'
 		script += "f(x) = (1+ct)/(1-ct) -(2*ct*(1-ct**x))/(1-ct)**2/x\n\n"
 		script += 'plot '
-		if val.base_name == "CN":
+		if var.base_name == "CN":
 			for i in range(repeat):
 				script += 'data ind ' + str(i) + ' w l lc ' + str(i) + ' noti, \\\n'
-		elif val.base_name == "CN_part":
+		elif var.base_name == "CN_part":
 			for i in range(repeat):
 				script += 'data ind ' + str(i) + ' w l lc ' + str(i) + ' ti "part:' + str(i) + '", \\\n'
 		else:
 			script += 'data w l ti "averaged", \\\n'
 		script += 'f(x) w l lw 2 ti "FreeRotationalModel"'
-	elif val.base_name == 'Corr_stress' or val.base_name == 'Corr_stress_mod':
+	elif var.base_name == 'Corr_stress' or var.base_name == 'Corr_stress_mod':
 		script += 'set logscale xy \n\nset format x "10^{%L}" \nset format y "10^{%L}"\n\n'
-		script += f'G={val.nu:}\nfunc={val.func:}\nf1 = (func - 1.)/(func + 1.)\nf2 = 1. - 2./func\n\n'
+		script += f'G={var.nu:}\nfunc={var.func:}\nf1 = (func - 1.)/(func + 1.)\nf2 = 1. - 2./func\n\n'
 		script += 'tau = 10000\nst = 0.1\neq = 0.1\ns = 1000\ne = 100000\n'
 		script += 'g(x) = eq +(st-eq)*exp(-x/tau)\nfit [s:e] g(x) data via st, eq, tau\n\n'
 		script += 'set label 1 sprintf("{/Symbol t} = %.2e", tau) at graph 0.15, 0.3\n'
@@ -697,7 +734,7 @@ def multi_script_content():
 		script += '[1000:] G w l lw 3 dt (10, 5) lt 8 ti "Affin", \\\n'
 		script += '[1000:] G*f1 w l lw 3 dt (10, 5) lt 9 ti "Q. Pht.", \\\n'
 		script += '[1000:] G*f2 w l lw 3 dt (10, 5) lt 7 ti "Phantom"\n\n'
-	elif val.base_name == 'Corr_stress_semi':
+	elif var.base_name == 'Corr_stress_semi':
 		script += 'set logscale y \n\n#set format x "10^{%L}" \nset format y "10^{%L}"\n\n'
 		script += 'a = 1\ntau =1000\n\ns = 100\ne = 1000\n\n'
 		script += 'f(x) = a*exp(-1*x/tau) \n'
@@ -706,7 +743,7 @@ def multi_script_content():
 		script += 'plot '
 		script += 'data w l ti "Stress", \\\n'
 		script += '[s:e] f(x) noti'
-	elif val.base_name == 'Corr_stress_all':
+	elif var.base_name == 'Corr_stress_all':
 		script += 'set logscale xy \n\nset format x "10^{%L}" \nset format y "10^{%L}"\n\n'
 		script += 'plot data u 1:2 w l ti "G_t", \\\n'
 		script += 'data u 1:3 w l ti "xy", \\\n'
@@ -714,6 +751,10 @@ def multi_script_content():
 		script += 'data u 1:5 w l ti "zx", \\\n'
 		script += 'data u 1:6 w l ti "xx-yy", \\\n'
 		script += 'data u 1:7 w l ti "yy-zz"'
+	elif var.base_name == 'Exchange':
+		script += 'plot data u 1:2 w l ti "Strands", \\\n'
+		script += 'data u 1:3 w l ti "Danglings", \\\n'
+		script += 'data u 1:4 w l ti "Roops"'
 	else:
 		script += 'plot '
 		for i in range(repeat):
@@ -806,10 +847,10 @@ def calc_gk():
 	return
 
 def calc_corr():
-	val.uobj.jump(val.uobj.totalRecord() - 1)
+	var.uobj.jump(var.uobj.totalRecord() - 1)
 	#
-	vol = val.uobj.get('Statistics_Data.Volume.Total_Average')
-	corr_all = val.uobj.get('Correlation_Functions.Stress.Correlation[]')
+	vol = var.uobj.get('Statistics_Data.Volume.Total_Average')
+	corr_all = var.uobj.get('Correlation_Functions.Stress.Correlation[]')
 	corr = []
 	prev = 0.
 	for data in corr_all:

@@ -221,13 +221,13 @@ def post_calc(pre, template, batch):
 			pre = read_udf
 			template = present_udf
 		# 平衡化計算
-		for i in range(var.equilib_repeat):
+		for i in range(var.equilib2_repeat):
 			# 平衡化
 			batch = make_title(batch, var.target_name + "Calculating-2nd_Eq_" + str(i))
 			fn_ext = ['2nd_Eq_' + str(i) + "_", "uin.udf"]
 			f_eval = 1
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.equilib_time)
+			eq_setup(template, pre, present_udf, var.equilib2_time)
 			pre = read_udf
 			template = present_udf
 
@@ -748,14 +748,47 @@ def exchange_setup(template, read_udf, present_udf):
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
 	u.put(0, p + 'Relaxation')
+	# #--- Simulation_Conditions ---
+	# # Bond
+	# p = 'Molecular_Attributes.Bond_Potential[].'		
+	# for i, bondname in enumerate(var.bond_name):
+	# 	u.put(bondname, 	p + 'Name', [i])
+	# 	u.put('Harmonic', 	p + 'Potential_Type', [i])
+	# 	u.put(0.97,			p + 'R0', [i])
+	# 	u.put(1000, 		p + 'Harmonic.K', [i])
+	#--- Write UDF ---
+	u.write(os.path.join(var.target_dir, present_udf))
+	return
+
+#####################################################
+# 直前の条件を維持して平衡化
+def eq_setup2(template, read_udf, present_udf, time):
+	u = UDFManager(os.path.join(var.target_dir, template))
+	u.jump(-1)
 	#--- Simulation_Conditions ---
-	# Bond
-	p = 'Molecular_Attributes.Bond_Potential[].'		
-	for i, bondname in enumerate(var.bond_name):
-		u.put(bondname, 	p + 'Name', [i])
-		u.put('Harmonic', 	p + 'Potential_Type', [i])
-		u.put(0.97,			p + 'R0', [i])
-		u.put(1000, 		p + 'Harmonic.K', [i])
+	# Dynamics_Conditions
+	p = 'Simulation_Conditions.Dynamics_Conditions.'
+	u.put(time[0],  p+'Time.delta_T')
+	u.put(time[1],  p+'Time.Total_Steps')
+	u.put(time[2],  p+'Time.Output_Interval_Steps')
+	# Moment
+	u.put(0, p + "Moment.Interval_of_Calc_Moment")
+	u.put(0, p + "Moment.Calc_Moment")
+	u.put(0, p + "Moment.Stop_Translation")
+	u.put(0, p + "Moment.Stop_Rotation")
+
+	#--- Initial_Structure ---
+	#
+	p = 'Initial_Structure.Read_Set_of_Molecules.'
+	u.put(read_udf, p+'UDF_Name')
+	u.put(1000, p+'Record')
+	# Generate_Method
+	p = 'Initial_Structure.Generate_Method.'
+	u.put('Restart', p+'Method')
+	u.put([read_udf, -1, 1, 0], p+'Restart')
+	p = 'Initial_Structure.Relaxation.'
+	u.put(0, p + 'Relaxation')
+
 	#--- Write UDF ---
 	u.write(os.path.join(var.target_dir, present_udf))
 	return
