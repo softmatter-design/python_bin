@@ -7,6 +7,7 @@ core = 1
 
 # nw_cond = [nw_model, strand, n_strand, n_segments, n_cell, n_sc, l_bond, c_n]
 nw_model = ''
+calc = ''
 strand = ''
 n_strand = 1
 n_segments = 1
@@ -21,7 +22,7 @@ restart = ''
 cond_top = []
 histgram_bins = 0
 
-# sim_cond = [entanglement, multi_org, density_org, shrinkage, expand, step_press, press_time, step_rfc, step_rfc_time, equilib_repeat, equilib_time, greenkubo, greenkubo_repeat, greenkubo_time, calc]
+# sim_cond = [entanglement, multi_org, density_org, shrinkage, expand, step_press, press_time, step_rfc, step_rfc_time, eqn_repeat, eqn_time, greenkubo, greenkubo_repeat, greenkubo_time, calc]
 entanglement = ''
 multi_org = 0
 density_org = 0
@@ -31,24 +32,21 @@ step_press = []
 press_time = []
 step_rfc = []
 step_rfc_time = []
-equilib_repeat = 1
-equilib_time = []
+eqn_repeat = 1
+eqn_time = []
 greenkubo = ''
 greenkubo_repeat = 1
 greenkubo_time = []
 
 exchange=''
-exchange_repeat=1
 exchange_target=''
-exchange_sci_len=1.0
-exchange_int=10
-exchange_prob=1.0
-exchange_thr=1.0
-exchange_time=[]
+exchange_cond=[]
 
-equilib2_repeat = 1
-equilib2_time = []
-calc = ''
+exchange_post_time = []
+
+exchange_eqn_repeat = 1
+exchange_eqn_time = []
+
 
 # mod_cond = [n_chains, n_beads_unit, e2e, org_unitcell]
 n_chains = 1

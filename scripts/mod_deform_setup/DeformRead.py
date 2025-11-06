@@ -79,17 +79,17 @@ def make_newudf():
 			Stretch:{
 				DeformRate[]:float "これらは変形レートのリスト",
 				MaxDeformation:float "最大ひずみ",
-				Resolution:float "これは１ステップ計算での伸長度　Res = lambda/1_step"
+				Resolution:float "これは１ステップ計算での伸長度 Res = lambda/1_step"
 				}
 			Shear:{
 				DeformRate[]:float "これらは変形レートのリスト",
 				MaxDeformation:float "最大ひずみ",
-				Resolution:float "これは１ステップ計算での伸長度　Res = lambda/1_step"
+				Resolution:float "これは１ステップ計算での伸長度 Res = lambda/1_step"
 				}
 			both:{
 				DeformRate[]:float "これらは変形レートのリスト",
 				MaxDeformation:float "最大ひずみ",
-				Resolution:float "これは１ステップ計算での伸長度　Res = lambda/1_step"
+				Resolution:float "これは１ステップ計算での伸長度 Res = lambda/1_step"
 				}
 		} "計算ターゲットの条件を設定"		
 	CycleDeformation:{
@@ -99,7 +99,7 @@ def make_newudf():
 				MaxDeformation:float "最大ひずみ",
 				Repeat:int "サイクルの繰り返し数",
 				DeformRate[]:float "これらは変形レートのリスト",
-				Resolution:float "これは１ステップ計算での伸長度　Res = lambda/1_step"
+				Resolution:float "これは１ステップ計算での伸長度 Res = lambda/1_step"
 				}
 			}
 		CyclicShear:{
@@ -107,7 +107,7 @@ def make_newudf():
 				MaxDeformation:float "最大ひずみ",
 				Repeat:int "サイクルの繰り返し数",
 				DeformRate[]:float "これらは変形レートのリスト",
-				Resolution:float "これは１ステップ計算での伸長度　Res = lambda/1_step"
+				Resolution:float "これは１ステップ計算での伸長度 Res = lambda/1_step"
 				}
 			}
 		} "計算ターゲットの条件を設定"

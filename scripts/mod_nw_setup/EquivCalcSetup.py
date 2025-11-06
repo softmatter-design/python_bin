@@ -24,7 +24,7 @@ def setup_udf():
 		batch = npt_calc(batch)
 	#####################
 	# バッチファイルを作成
-	f_batch = os.path.join(var.target_dir, '_Calc_all.bat')
+	f_batch = os.path.join(var.target_dir, 'calc_all.bat')
 	with open(f_batch,'w') as f:
 		# f.write(batch_all)
 		f.write(batch)
@@ -189,13 +189,13 @@ def npt_calc(batch):
 
 def post_calc(pre, template, batch):
 	# 平衡化計算
-	for i in range(var.equilib_repeat):
+	for i in range(var.eqn_repeat):
 		# 平衡化
 		batch = make_title(batch, var.target_name + "Calculating-Eq_" + str(i))
 		fn_ext = ['Eq_' + str(i) + "_", "uin.udf"]
 		f_eval = 1
 		present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-		eq_setup(template, pre, present_udf, var.equilib_time)
+		eq_setup(template, pre, present_udf, var.eqn_time)
 		pre = read_udf
 		template = present_udf
 	# グリーン久保
@@ -210,27 +210,34 @@ def post_calc(pre, template, batch):
 			pre = read_udf
 			template = present_udf
 	# 結合交換
-	if var.exchange_repeat != 0:
-		for i in range(var.exchange_repeat):
-			# 平衡化
+	if var.exchange=='Yes':
+		for i, item in enumerate(var.exchange_cond):
+			# 結合交換
 			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i))
 			fn_ext = ['Exchange_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			exchange_setup(template, pre, present_udf)
+			exchange_setup(template, pre, present_udf, item)
 			pre = read_udf
 			template = present_udf
-		# 平衡化計算
-		for i in range(var.equilib2_repeat):
-			# 平衡化
-			batch = make_title(batch, var.target_name + "Calculating-2nd_Eq_" + str(i))
-			fn_ext = ['2nd_Eq_' + str(i) + "_", "uin.udf"]
-			f_eval = 1
+			# ポスト処理
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_post")
+			fn_ext = ['Exchange_' + str(i) + "_post_", "uin.udf"]
+			f_eval = 0
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.equilib2_time)
+			eq_setup(template, pre, present_udf, var.exchange_post_time)
 			pre = read_udf
 			template = present_udf
-
+			# 平衡化計算
+			for j in range(var.exchange_eqn_repeat):
+				# 平衡化
+				batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_eqn_" + str(j))
+				fn_ext = ['Exchange_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
+				f_eval = 1
+				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+				eq_setup(template, pre, present_udf, var.exchange_eqn_time)
+				pre = read_udf
+				template = present_udf
 	return batch
 
 ###############
@@ -697,7 +704,12 @@ def greenkubo_setup(template, read_udf, present_udf, time):
 
 ###########################################################
 # 結合交換
-def exchange_setup(template, read_udf, present_udf):
+def exchange_setup(template, read_udf, present_udf, item):
+	exchange_sci_len=item[0]
+	exchange_int=item[1]
+	exchange_prob=item[2]
+	exchange_thr=item[3]
+	exchange_time=item[4]
 	if var.exchange_target == 'single':
 		atom = 'Dis_S'
 		bond = 'bond_DS'
@@ -709,9 +721,9 @@ def exchange_setup(template, read_udf, present_udf):
 	#--- Simulation_Conditions ---
 	# Dynamics_Conditions
 	p = 'Simulation_Conditions.Dynamics_Conditions.'
-	u.put(var.exchange_time[0],  p+'Time.delta_T')
-	u.put(var.exchange_time[1],  p+'Time.Total_Steps')
-	u.put(var.exchange_time[2],  p+'Time.Output_Interval_Steps')
+	u.put(exchange_time[0],  p+'Time.delta_T')
+	u.put(exchange_time[1],  p+'Time.Total_Steps')
+	u.put(exchange_time[2],  p+'Time.Output_Interval_Steps')
 	# Calc Exchange
 	u.put('ON', 'React_Conditions.React_Flag')
 	#
@@ -722,11 +734,11 @@ def exchange_setup(template, read_udf, present_udf):
 	#
 	p = 'React_Conditions.Bond_Creation.Creation_Type_Array[].'
 	i = 0
-	u.put(var.exchange_int, p + 'Interval_of_Reaction', [i])
-	u.put(var.exchange_prob, p + 'Probability', [i])
+	u.put(exchange_int, p + 'Interval_of_Reaction', [i])
+	u.put(exchange_prob, p + 'Probability', [i])
 	u.put('ON', p + 'In_Chain', [i])
 	u.put('Simple_Creation', p + 'Creation_Type.Type_Keyword', [i])
-	u.put(var.exchange_thr, p + 'Creation_Type.Simple_Creation.Threshold_Distance', [i])
+	u.put(exchange_thr, p + 'Creation_Type.Simple_Creation.Threshold_Distance', [i])
 	u.put(bond, p + 'Creation_Type.Simple_Creation.Potential_Name', [i])
 	u.put(atom, p + 'Creation_Type.Simple_Creation.Atom_Type_Sequence.atom1', [i])
 	u.put(atom, p + 'Creation_Type.Simple_Creation.Atom_Type_Sequence.atom2', [i])
@@ -735,7 +747,7 @@ def exchange_setup(template, read_udf, present_udf):
 	i = 0
 	u.put(bond, p + 'Bond_Potential_Name', [i])
 	u.put('Length', p + 'Scission_Type', [i])
-	u.put(var.exchange_sci_len, p + 'Length.Scission_length', [i])
+	u.put(exchange_sci_len, p + 'Length.Scission_length', [i])
 
 	#--- Initial_Structure ---
 	#
@@ -748,14 +760,7 @@ def exchange_setup(template, read_udf, present_udf):
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
 	u.put(0, p + 'Relaxation')
-	# #--- Simulation_Conditions ---
-	# # Bond
-	# p = 'Molecular_Attributes.Bond_Potential[].'		
-	# for i, bondname in enumerate(var.bond_name):
-	# 	u.put(bondname, 	p + 'Name', [i])
-	# 	u.put('Harmonic', 	p + 'Potential_Type', [i])
-	# 	u.put(0.97,			p + 'R0', [i])
-	# 	u.put(1000, 		p + 'Harmonic.K', [i])
+
 	#--- Write UDF ---
 	u.write(os.path.join(var.target_dir, present_udf))
 	return

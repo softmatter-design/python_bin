@@ -87,7 +87,7 @@ def makenewudf():
 				} "ネットワーク・トポロジーを選択",
 			} "計算ターゲットの条件を設定"
 		SimulationCond:{
-			Equilib_Condition:{
+			Eqn_Condition:{
 					Repeat: int "平衡化計算の繰り返し数",
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
 				} "平衡化計算の時間条件を入力"
@@ -101,17 +101,21 @@ def makenewudf():
 			Exchange:{
 				Calc:select{"Yes", "No"},
 				Yes:{
-					Repeat:int "計算の繰り返し数",
 					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
-					Scission_length: double "切断距離",
-					Creation_type:{Interval: int, Probability: double, Threshold: double},
-					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
+					Dissociate_cond[]:{
+									Scission_length: double "ボンド切断距離",
+									Creation_Int: int "ボンド生成頻度",
+									Creation_Prob: double "ボンド生成確率", 
+									Creation_Threshold: double "ボンド生成距離",
+									Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
+									},
+					Post_time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "後処理の時間条件を入力",
+					Eqn_Condition:{
+									Repeat: int "平衡化計算の繰り返し数",
+									Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
+									} "平衡化計算条件を入力"
 					} "結合交換反応の条件を設定"
 				}
-			Equilib_Condition_2:{
-					Repeat: int "平衡化計算の繰り返し数",
-					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
-				} "平衡化計算の時間条件を入力"
 			l_bond: float "シミュレーションでのボンドの自然長"
 			} "シミュレーションの条件を設定"
 	\end{def}
@@ -132,8 +136,12 @@ def makenewudf():
 		SimulationCond:{
 			{3,{1.0e-02,1000000,10000}}
 			{"No",{5,{1.0e-02,1000000,10000}}}
-			{"Yes",{3,"single", 1.18, {1,1.0,1.2},{1e-03,2000000,10000}}}
-			{3,{1.0e-03,1000000,10000}}
+			{"Yes",
+				{"single", [{1.18, 1, 1.0, 1.2, {1.0e-03,2000000,20000}}, {1.18, 1, 1.0, 1.2, {1.0e-03,2000000,20000}}, {1.18, 1, 1.0, 1.2, {1.0e-03,2000000,20000}}],
+				{1.0e-3, 100000, 1000},
+				{2,{1.0e-02,100000,1000}}
+				}
+			}
 			0.97
 			}
 
@@ -260,8 +268,8 @@ def readconditionudf():
 		var.press_time = u.get('TargetCond.Entanglement.NO_Entangled.Time')
 	##########
 	## シミュレーションの条件
-	var.equilib_repeat = u.get('SimulationCond.Equilib_Condition.Repeat')
-	var.equilib_time = u.get('SimulationCond.Equilib_Condition.Time')
+	var.eqn_repeat = u.get('SimulationCond.Eqn_Condition.Repeat')
+	var.eqn_time = u.get('SimulationCond.Eqn_Condition.Time')
 	#####
 	var.greenkubo = u.get('SimulationCond.GreenKubo.Calc')
 	var.greenkubo_repeat = 0
@@ -271,24 +279,27 @@ def readconditionudf():
 		var.greenkubo_time = u.get('SimulationCond.GreenKubo.Yes.Time')
 	#####
 	var.exchange=u.get('SimulationCond.Exchange.Calc')
-	var.exchange_repeat=1
-	var.exchange_target='single'
-	var.exchange_sci_len=1.0
-	var.exchange_int=10
-	var.exchange_prob=1.0
-	var.exchange_thr=1.0
-	var.exchange_time=[]
+	# var.exchange_repeat=1
+	# var.exchange_target='single'
+	# var.exchange_sci_len=1.0
+	# var.exchange_int=10
+	# var.exchange_prob=1.0
+	# var.exchange_thr=1.0
+	# var.exchange_time=[]
 	if var.exchange=='Yes':
-		var.exchange_repeat=u.get('SimulationCond.Exchange.Yes.Repeat')
 		var.exchange_target=u.get('SimulationCond.Exchange.Yes.Target')
-		var.exchange_sci_len=u.get('SimulationCond.Exchange.Yes.Scission_length')
-		var.exchange_int=u.get('SimulationCond.Exchange.Yes.Creation_type.Interval')
-		var.exchange_prob=u.get('SimulationCond.Exchange.Yes.Creation_type.Probability')
-		var.exchange_thr=u.get('SimulationCond.Exchange.Yes.Creation_type.Threshold')
-		var.exchange_time=u.get('SimulationCond.Exchange.Yes.Time')
+		var.exchange_cond = u.get('SimulationCond.Exchange.Yes.Dissociate_cond[]')
+
+			# print(dissociate_cond)
+			# var.exchange_sci_len=dissociate_cond[0]
+			# var.exchange_int=dissociate_cond[1]
+			# var.exchange_prob=dissociate_cond[2]
+			# var.exchange_thr=dissociate_cond[3]
+			# var.exchange_time=dissociate_cond[4]
+		var.exchange_post_time = u.get('SimulationCond.Exchange.Yes.Post_time')
 		#
-		var.equilib2_repeat = u.get('SimulationCond.Equilib_Condition_2.Repeat')
-		var.equilib2_time = u.get('SimulationCond.Equilib_Condition_2.Time')
+		var.exchange_eqn_repeat = u.get('SimulationCond.Exchange.Yes.Eqn_Condition.Repeat')
+		var.exchange_eqn_time = u.get('SimulationCond.Exchange.Yes.Eqn_Condition.Time')
 	#####
 	var.l_bond = u.get('SimulationCond.l_bond')
 	#####
@@ -409,9 +420,9 @@ def init_calc():
 	else:
 		sys.exit("Something Wrong!!")
 	#
-	text = "#########################################" + "\n"
+	text = "##############################################" + "\n"
 	text += "計算に使用するコア数\t\t" + str(var.core ) + "\n"
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	text += "ネットワークトポロジー\t\t" + str(var.nw_model) + "\n"
 	text += "ネットワークモデル\t\t" + str(var.strand) + "\n"
 	if var.nw_model == "Random":
@@ -421,7 +432,7 @@ def init_calc():
 		elif var.calc == 'Calc':
 			text += "\t** ランダム構造を計算 **\n"
 			text += "ランダム構造の計算条件\t" + str(var.cond_top) + "\n"
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	text += "ストランド中のセグメント数:\t" + str(var.n_segments) + "\n"
 	text += "ストランドの種類:\t\t" + str(var.strand_type) + "\n"
 	if var.strand_type == "KG":
@@ -440,7 +451,7 @@ def init_calc():
 	text += "初期の末端間距離:\t\t" + str(round(var.e2e, 4)) + "\n"
 	text += "当初の単位ユニット:\t\t" + str(round(var.org_unitcell, 4)) + "\n"
 	text += "一辺当たりの単位ユニット数:\t" + str(var.n_cell) + "\n"
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	if calc_flag == 1:
 		text += "設定密度:\t\t\t" + str(var.density_mod) + "\n"
 		text += "算出された多重度:\t\t" + str(var.multi_mod) + "\n"
@@ -453,7 +464,7 @@ def init_calc():
 		text += "収縮比:\t\t\t\t" + str(round(var.shrinkage, 4)) + "\n"
 	text += "NW の全セグメント数:\t\t" + str(var.total_net_atom) + "\n"
 	text += "システムサイズ:\t\t\t" + str(round(var.system, 4)) + "\n"
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	text += "絡み合いの有無:\t\t\t" + str(var.entanglement) + "\n"
 	if var.entanglement == 'Entangled':
 		text += "Slow Push Off 条件: " + ', '.join(map(str, var.step_rfc)) + "\n"
@@ -462,28 +473,32 @@ def init_calc():
 		text += "NPT 計算時の初期膨張率:\t\t" + str(var.expand) + "\n"
 		text += "ステップ圧力:\t" + ', '.join(map(str, var.step_press)) + "\n"
 		text += "圧力時間条件:\t\t" + str(var.press_time) + "\n"
-	text += "#########################################" + "\n"
-	text += "平衡化計算繰り返し:\t\t" + str(var.equilib_repeat) + "\n"
-	text += "平衡化時間条件:\t\t" + str(var.equilib_time ) + "\n"
+	text += "##############################################" + "\n"
+	text += "平衡化計算繰り返し:\t\t" + str(var.eqn_repeat) + "\n"
+	text += "平衡化時間条件:\t\t" + str(var.eqn_time ) + "\n"
+	text += "##############################################" + "\n"
 	if var.greenkubo == 'Yes':
 		text += "#\n応力緩和計算繰り返し:\t\t" + str(var.greenkubo_repeat) + "\n"
 		text += "応力緩和時間条件:\t" + str(var.greenkubo_time) + "\n"
 	#
 	if var.exchange=='Yes':
-		text += "#\n結合交換繰り返し:\t\t" + str(var.exchange_repeat) + "\n"
 		text += "結合交換対象ボンド:\t\t" + str(var.exchange_target) + "\n"
-		text += "結合切断距離:\t\t\t" + str(var.exchange_sci_len) + "\n"
-		text += "結合生成インターバル:\t\t" + str(var.exchange_int) + "\n"
-		text += "結合生成確率:\t\t\t" + str(var.exchange_prob) + "\n"
-		text += "結合生成距離:\t\t\t" + str(var.exchange_thr) + "\n"
-		text += "結合交換計算時間:\t\t" + str(var.exchange_time) + "\n"
+		for i, item in enumerate(var.exchange_cond):
+			text += "## " + str(i) + " ##\n"
+			text += "結合切断距離:\t\t\t" + str(item[0]) + "\n"
+			text += "結合生成インターバル:\t\t" + str(item[1]) + "\n"
+			text += "結合生成確率:\t\t\t" + str(item[2]) + "\n"
+			text += "結合生成距離:\t\t\t" + str(item[3]) + "\n"
+			text += "結合交換計算時間:\t" + str(item[4]) + "\n"
+		text += "#####\n"
+		text += "ポスト処理:\t\t" + str(var.exchange_post_time) + "\n"
 		text += "##" + "\n"
-		text += "2nd_平衡化計算繰り返し:\t\t" + str(var.equilib2_repeat) + "\n"
-		text += "2nd_平衡化時間条件:\t\t" + str(var.equilib2_time ) + "\n"
+		text += "交換後_平衡化繰り返し:\t\t" + str(var.exchange_eqn_repeat) + "\n"
+		text += "交換後_平衡化時間条件:\t" + str(var.exchange_eqn_time) + "\n"
 
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	text += "ストランドの数密度:\t\t" + str(round(var.nu, 5)) + "\n"
-	text += "#########################################" + "\n"
+	text += "##############################################" + "\n"
 	print(text)
 
 	if abs(err_dens) > 1:
@@ -547,7 +562,7 @@ def make_cond_udf():
 			}
 			} "計算ターゲットの条件を設定"
 		SimulationCond:{
-			Equilib_Condition:{
+			Eqn_Condition:{
 					repeat: int "平衡化計算の繰り返し数",
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int
 					} "平衡化計算の時間条件を入力"
@@ -625,10 +640,10 @@ def make_cond_udf():
 	u.put(var.system, 'TargetCond.System.SystemSize')
 	u.put(var.nu, 'TargetCond.System.Nu')
 	###################
-	u.put(var.equilib_repeat, 'SimulationCond.Equilib_Condition.repeat')
-	u.put(var.equilib_time[0], 'SimulationCond.Equilib_Condition.Time.delta_T')
-	u.put(var.equilib_time[1], 'SimulationCond.Equilib_Condition.Time.Total_Steps')
-	u.put(var.equilib_time[2], 'SimulationCond.Equilib_Condition.Time.Output_Interval_Steps')
+	u.put(var.eqn_repeat, 'SimulationCond.Eqn_Condition.repeat')
+	u.put(var.eqn_time[0], 'SimulationCond.Eqn_Condition.Time.delta_T')
+	u.put(var.eqn_time[1], 'SimulationCond.Eqn_Condition.Time.Total_Steps')
+	u.put(var.eqn_time[2], 'SimulationCond.Eqn_Condition.Time.Output_Interval_Steps')
 
 	u.put(var.l_bond, 'SimulationCond.l_bond')
 	##################
