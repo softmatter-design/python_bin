@@ -17,6 +17,7 @@ chains = []
 record = 1
 bond_list = []
 angle_list = []
+r2_ij=[]
 Rx_list = []
 Ry_list = []
 Rz_list = []

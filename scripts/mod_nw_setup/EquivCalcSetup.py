@@ -225,7 +225,7 @@ def post_calc(pre, template, batch):
 			fn_ext = ['Exchange_' + str(i) + "_post_", "uin.udf"]
 			f_eval = 0
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup(template, pre, present_udf, var.exchange_post_time)
+			eq_setup2(template, pre, present_udf, var.exchange_post_time)
 			pre = read_udf
 			template = present_udf
 			# 平衡化計算
@@ -235,7 +235,7 @@ def post_calc(pre, template, batch):
 				fn_ext = ['Exchange_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
 				f_eval = 1
 				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				eq_setup(template, pre, present_udf, var.exchange_eqn_time)
+				eq_setup2(template, pre, present_udf, var.exchange_eqn_time)
 				pre = read_udf
 				template = present_udf
 	return batch
@@ -793,6 +793,9 @@ def eq_setup2(template, read_udf, present_udf, time):
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
 	u.put(0, p + 'Relaxation')
+
+	# Calc Exchange
+	u.put('OFF', 'React_Conditions.React_Flag')
 
 	#--- Write UDF ---
 	u.write(os.path.join(var.target_dir, present_udf))

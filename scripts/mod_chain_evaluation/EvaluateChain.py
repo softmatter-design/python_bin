@@ -188,9 +188,11 @@ def eval_chain():
 	for record in range(1, rec_size):
 		print("Reading Rec=", record, '/', rec_size - 1)
 		var.uobj.jump(record)
-		chains = make_chains()
-		make_r2_ij(chains, record)
-		# read_chain()
+		# chains = make_chains()
+		# make_r2_ij(chains)
+		make_r2_ij2(record)
+		make_cn()
+		read_angle(record)
 
 	# 鎖に沿ったセグメント間距離の平均を計算
 	calc_cn()
@@ -217,7 +219,6 @@ def eval_exc_strand():
 		result.append([n_strand, n_dangling, n_roop])
 	return result
 
-#
 def make_chains():
 	chains = []
 	for chain in var.chain_list:
@@ -232,55 +233,79 @@ def make_chains():
 	return chains
 
 #
-def make_r2_ij(chains, record):
+def make_r2_ij2(record):
 	bound_setup()
 	CU.setCell(tuple(var.uobj.get("Structure.Unit_Cell.Cell_Size")))
 	# ステップの数に対応した空リストを作成
-	r2_ij = [[] for i in range(var.chain_len)]
+	var.r2_ij = [[] for i in range(var.chain_len)]
 
-	for chain in chains:
-		for step in range(1, var.chain_len):
-			for start in range(var.chain_len - step):
-				end1 = tuple(chain[start])
-				end2 = tuple(chain[start + step])
-				e2e_vec =  CU.distanceWithBoundary(end1, end2)
-				e2e_dist = np.linalg.norm(np.array(e2e_vec))
-				r2 = e2e_dist**2
-				r2_ij[step].append(r2)
-				if step == 1:
-					if e2e_dist > 2:
-						print(e2e_dist)
-					var.bond_list.append(e2e_dist)
-				if step == var.chain_len -1:
-					var.Rx_list.append(e2e_vec[0])
-					var.Ry_list.append(e2e_vec[1])
-					var.Rz_list.append(e2e_vec[2])
-					#
-					var.R_list.append(e2e_dist)
-	
-	# cn
-	# print(var.chain_len)
-	# print(len(r2_ij))
-	# for i, line in enumerate(r2_ij):
-	# 	if i>10:
-	# 		print(i)
-	# 		print(line[0:5])
-	# 		print(len(line))
+	positions = var.uobj.get("Structure.Position.mol[].atom[]")
 
+	# for chain in chains:
+	for chain in var.chain_list:
+		mol = chain[0]
+		for each in chain[1]:
+			for step in range(1, var.chain_len):
+				for start in range(var.chain_len - step):
+					# print(positions[1][0])
+					# print(record, mol, start, each[start])
+					# print(positions[mol][each[start]])
+					end1 = tuple(positions[mol][each[start]])
+					end2 = tuple(positions[mol][each[start + step]])
+					e2e_vec =  CU.distanceWithBoundary(end1, end2)
+					e2e_dist = np.linalg.norm(np.array(e2e_vec))
+					r2 = e2e_dist**2
+					var.r2_ij[step].append(r2)
+					if step == 1:
+						if e2e_dist > 2:
+							# print(record)
+							# print(e2e_dist)
+							# print(mol, each, start, step)
+							# print(each[start])
+							print(end1, end2)
+						var.bond_list.append(e2e_dist)
+					if step == var.chain_len -1:
+						var.Rx_list.append(e2e_vec[0])
+						var.Ry_list.append(e2e_vec[1])
+						var.Rz_list.append(e2e_vec[2])
+						#
+						var.R_list.append(e2e_dist)
+	return
+
+def make_cn():
 	cn = []
 	# このシミュレーションでの平均ボンド長
 	var.l_bond = np.average(np.array(var.bond_list))
-	for i in range(1, len(r2_ij)):
+	for i in range(1, len(var.r2_ij)):
 		# 伸び切り長さで割り込んで、特性比にする。
-		cn.append([i, np.average(np.array(r2_ij[i]))/(i*var.l_bond**2)])
+		cn.append([i, np.average(np.array(var.r2_ij[i]))/(i*var.l_bond**2)])
 	# print(cn)
 	var.cn_list.append(cn)
+	return
 
-	# angle
+# angle
+def read_angle(record):
 	ba = CognacBasicAnalysis(var.target, record)	
 	anglename = var.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
 	tmp = np.array(ba.angle(anglename[0]))
 	var.angle_list.extend(list(tmp[~np.isnan(tmp)]))
+	return
+
+# 周期境界条件の設定
+def bound_setup():
+	axis = var.uobj.get("Simulation_Conditions.Boundary_Conditions")
+	boundarylist = [0,0,0]
+	#
+	for i in range(0,3):
+		if axis[i] == "NONE" :
+			boundarylist[i] = 0
+		elif axis[i] == "PERIODIC" :
+			boundarylist[i] = 1
+		elif axis[i] == "REFLECTIVE1" :
+			boundarylist[i] = 2
+		elif axis[i] == "REFLECTIVE2" :
+			boundarylist[i] = 3
+	CU.setBoundary(tuple(boundarylist))
 	return
 
 # ポリマー鎖関連の特性情報
@@ -342,58 +367,6 @@ def make_r2_ij(chains, record):
 		
 # 	var.xp_list.append(xp_ave)
 # 	print(var.xp_list)
-
-		
-# 	# cn
-# 	cn = []
-# 	for i in range(1, len(r2_ij)):
-# 		cn.append([i, np.average(np.array(r2_ij[i]))/(i*var.l_bond**2)])
-# 	var.cn_list.append(cn)
-# 	# angle
-# 	anglename = var.uobj.get("Molecular_Attributes.Angle_Potential[].Name")
-# 	tmp = np.array(ba.angle(anglename[0]))
-# 	var.angle_list.extend(list(tmp[~np.isnan(tmp)]))
-# 	return
-
-
-
-
-
-
-
-
-
-
-
-# 周期境界条件の設定
-def bound_setup():
-	axis = var.uobj.get("Simulation_Conditions.Boundary_Conditions")
-	boundarylist = [0,0,0]
-	#
-	for i in range(0,3):
-		if axis[i] == "NONE" :
-			boundarylist[i] = 0
-		elif axis[i] == "PERIODIC" :
-			boundarylist[i] = 1
-		elif axis[i] == "REFLECTIVE1" :
-			boundarylist[i] = 2
-		elif axis[i] == "REFLECTIVE2" :
-			boundarylist[i] = 3
-	CU.setBoundary(tuple(boundarylist))
-	return
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
