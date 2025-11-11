@@ -34,6 +34,7 @@ def read_arg():
 			sys.exit('\nSelected udf of ', args.udf, ' seems not exist !\nbye now!!')
 		else:
 			var.read_udf = args.udf
+			var.base_name = args.udf.split('.')[0]
 	else:
 		print('no udf file is selected')
 		sys.exit('select proper udf file to read.')
@@ -41,11 +42,12 @@ def read_arg():
 
 # 計算対象の条件を読み取る
 def read_nw_cond():
-	if not os.access('target_condition.udf', os.R_OK):
-		sys.exit("\n'target_condition.udf' is not exists.")
+	if not os.access(os.path.join(var.base_name, 'target_condition.udf'), os.R_OK):
+		sys.exit("\n'target_condition.udf' is not exists in the '" + var.base_name + "' directory!!")
+		return
 	else:
-		cond_u = UDFManager('target_condition.udf')
-		var.func = cond_u.get('TargetCond.NetWork.N_Strands')
+		cond_u = UDFManager(os.path.join(var.base_name, 'target_condition.udf'))
+		var.func = cond_u.get('TargetCond.NetWork.Function')
 		var.nu = cond_u.get('TargetCond.System.Nu')
 		var.system_size = cond_u.get('TargetCond.System.SystemSize')
 	return
@@ -256,13 +258,13 @@ def read_condition():
 	# 計算に使用するコア数
 	var.core = u.get('CalcConditions.Cores')
 	# Simple Deformation
-	var.simple_def_mode  = u.get('SimpleDeformation.DeformMode').lower()
-	if var.simple_def_mode == 'stretch':
+	var.simple_def_mode  = u.get('SimpleDeformation.DeformMode')
+	if var.simple_def_mode == 'Stretch':
 		var.sim_rate_list = u.get('SimpleDeformation.Stretch.DeformRate[]')
 		var.sim_deform_max = u.get('SimpleDeformation.Stretch.MaxDeformation')
 		var.sim_resolution = u.get('SimpleDeformation.Stretch.Resolution')
 		var.sim_deform = var.simple_def_mode
-	elif var.simple_def_mode == 'shear':
+	elif var.simple_def_mode == 'Shear':
 		var.sim_rate_list = u.get('SimpleDeformation.Shear.DeformRate[]')
 		var.sim_deform_max = u.get('SimpleDeformation.Shear.MaxDeformation')
 		var.sim_resolution = u.get('SimpleDeformation.Shear.Resolution')

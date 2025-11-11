@@ -14,19 +14,19 @@ import mod_deform_setup.DeformGeneral as gen
 # 単純変形の設定
 def setup_simple_deform():
 	if var.simple_def_mode == 'both':
-		for var.sim_deform in ['shear', 'stretch']:
+		for var.sim_deform in ['Shear', 'Stretch']:
 			set_simple_eachrate()
 	else:
 		set_simple_eachrate()
 	return
 
 def set_simple_eachrate():
-	var.sim_basedir = f"{var.sim_deform:}_calculation_read_{var.read_udf.split('.')[0]:}_until_{var.sim_deform_max:}"
-	if os.path.exists(var.sim_basedir):
-		print("Use existing dir of ", var.sim_basedir)
+	var.simple_basedir = f"Deform_read_{var.base_name:}/{var.sim_deform:}_until_{var.sim_deform_max:}"
+	if os.path.exists(var.simple_basedir):
+		print("Use existing dir of ", var.simple_basedir)
 	else:
-		print("Make new dir of ", var.sim_basedir)
-		os.makedirs(var.sim_basedir)
+		print("Make new dir of ", var.simple_basedir)
+		os.makedirs(var.simple_basedir)
 
 	c_dir = os.getcwd().split('\\')[-1]
 	var.title_base = str(c_dir.split('_', 2)[-1]) + f"_{var.sim_deform:}_calculation_until_{var.sim_deform_max:}_"
@@ -37,10 +37,10 @@ def set_simple_eachrate():
 	elif platform.system() == "Linux":
 		task = 'sh calc_series.sh\n'
 		filename = 'calc_all.sh'
-	gen.make_batch_series([f'rate_{rate:4.0e}' for rate in var.sim_rate_list], var.sim_basedir, task, filename,'')
+	gen.make_batch_series([f'rate_{rate:4.0e}' for rate in var.sim_rate_list], var.simple_basedir, task, filename,'')
 
 	for var.sim_rate in var.sim_rate_list:
-		var.sim_ratedir = os.path.join(var.sim_basedir, f"rate_{var.sim_rate:4.0e}")
+		var.sim_ratedir = os.path.join(var.simple_basedir, f"rate_{var.sim_rate:4.0e}")
 		#
 		if os.path.exists(var.sim_ratedir):
 			print("Use existing dir of ", var.sim_ratedir)
@@ -53,9 +53,9 @@ def set_simple_eachrate():
 
 def set_rotation_simple():
 	# 変形方法に応じて回転方向を設定
-	if var.sim_deform == 'shear':
+	if var.sim_deform == 'Shear':
 		var.step_rotate = ['base', 'x', 'y', 'z', 'yx', 'zx']
-	elif var.sim_deform == 'stretch':
+	elif var.sim_deform == 'Stretch':
 		var.step_rotate = ['base', 'x', 'y']
 	# プラットフォームに応じて命令を変更
 	if platform.system() == "Windows":
@@ -117,9 +117,9 @@ def set_udf_batch_sim():
 
 # UDFを作成
 def make_simpledeform_udf(udf_in):
-	if var.sim_deform == 'stretch':
+	if var.sim_deform == 'Stretch':
 		deform_time = abs(var.sim_deform_max - 1)/var.sim_rate
-	elif var.sim_deform == 'shear':
+	elif var.sim_deform == 'Shear':
 		deform_time = var.sim_deform_max/var.sim_rate
 	#
 	time_total = round(deform_time/var.sim_time_div)
@@ -139,7 +139,7 @@ def make_simpledeform_udf(udf_in):
 	u.put(0,			p + 'Pressure_Stress.Pressure')
 
 	# Deformation
-	if var.sim_deform == 'stretch':
+	if var.sim_deform == 'Stretch':
 		p = "Simulation_Conditions.Dynamics_Conditions.Deformation."
 		u.put('Cell_Deformation', 		p + 'Method')
 		u.put('Simple_Elongation', 		p + 'Cell_Deformation.Method')
@@ -151,7 +151,7 @@ def make_simpledeform_udf(udf_in):
 		u.put('z', 						p + 'Cell_Deformation.Simple_Elongation.Axis')
 		u.put(1, 						p + 'Cell_Deformation.Interval_of_Deform')
 		u.put(0, 						p + 'Cell_Deformation.Deform_Atom')
-	elif var.sim_deform == 'shear':
+	elif var.sim_deform == 'Shear':
 		p = "Simulation_Conditions.Dynamics_Conditions.Deformation."
 		u.put('Lees_Edwards', 	p + 'Method')
 		u.put('Steady', 		p + 'Lees_Edwards.Method')

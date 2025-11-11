@@ -24,8 +24,7 @@ def setup_step_deform():
 	
 # 計算用のディレクトリーを作成
 def set_step_basedir():
-	var.step_dir = f'{var.step_deform:}_until_' + f'{var.step_deform_max:.1f}'.replace('.','_') + '_rate_' + f'{var.step_rate:.1e}'.replace('.', '_') + f'_read_{var.read_udf.split(".")[0]:}'
-
+	var.step_dir = f"Deform_read_{var.base_name:}/{var.step_deform:}_until_" + f'{var.step_deform_max:.1f}'.replace('.','_') + '_rate_' + f'{var.step_rate:.1e}'.replace('.', '_')
 	if os.path.exists(var.step_dir):
 		print("Use existing dir of ", var.step_dir)
 	else:

@@ -6,7 +6,7 @@ deform_udf = ''
 core = 1
 
 read_udf = ''
-base_udf = ''
+base_name = ''
 
 system_size = 0.
 sim_time_div = 0.01
@@ -19,7 +19,7 @@ sim_rate_list = []
 sim_rate = ''
 sim_deform_max = 1
 sim_resolution = 0.
-sim_basedir = ''
+simple_basedir = ''
 sim_ratedir = ''
 sim_dirlist = []
 

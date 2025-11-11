@@ -9,10 +9,15 @@ n_seg = 0
 l_bond= 0.
 cn = 0.
 nu = 0.
+system = 0.
 
 chain_list = []
 chain_len = 1
 chains = []
+
+N_strand = 0
+N_dangling = 0 
+N_roop = 0
 
 record = 1
 bond_list = []

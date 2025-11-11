@@ -11,6 +11,7 @@ import numpy as np
 import platform
 import subprocess
 import scipy.signal as signal
+import codecs
 #
 from UDFManager import UDFManager
 import CognacUtility as CU
@@ -28,6 +29,7 @@ def evaluate_nw():
 	eval_chain()
 	# 計算結果を出力
 	make_output()
+	make_data()
 	return
 #
 def evaluate_exc():
@@ -69,13 +71,14 @@ def read_all():
 	else:
 		cond_u = UDFManager('target_condition.udf')
 		var.nw_type = cond_u.get('TargetCond.Model.TargetModel')
-		var.func = cond_u.get('TargetCond.NetWork.N_Strands')
+		var.func = cond_u.get('TargetCond.NetWork.Function')
 		var.n_seg = cond_u.get('TargetCond.NetWork.N_Segments')
+		var.system = cond_u.get('TargetCond.System.SystemSize')
 		var.l_bond= cond_u.get('SimulationCond.l_bond')
 		var.cn = cond_u.get('TargetCond.Strand.Characteristic_Ratio')
 		var.nu = cond_u.get('TargetCond.System.Nu')
 	# ネットワークストランドのリストを作成
-	strand, dangling, roop, jp_pair = make_chain_list(0)
+	strand, dangling, roop = make_chain_list(0)
 	var.chain_list = strand
 	var.chain_len = len(strand[0][1][0])
 	return
@@ -90,7 +93,6 @@ def make_chain_list(record):
 	dangling = []
 	roop = []
 	jp_pair =[]
-	N_strand = N_dangling = N_roop = N_jp_pair = 0
 	#
 	mols = var.uobj.get("Set_of_Molecules.molecule[]")
 	atoms = var.uobj.get("Set_of_Molecules.molecule[].atom[]")
@@ -107,7 +109,7 @@ def make_chain_list(record):
 		jp_list = []
 		for line in tmp_jp_list:
 			jp_list.append(line[0])
-		mod_jp_list = [x-prev_mol_atoms for x in jp_list]
+		mod_jp_list = [x - prev_mol_atoms for x in jp_list]
 		# JP毎にストランドを数え上げる
 		for target_jp in mod_jp_list:
 			print(f'\rmol=', mol, "/", len(mols), ', jp=', mod_jp_list.index(target_jp), "/", len(mod_jp_list), "   ", end="")
@@ -129,26 +131,23 @@ def make_chain_list(record):
 						if chain[0] in mod_jp_list and chain[-1] in mod_jp_list:
 							if chain[0] != chain[-1]:
 								tmp_strand.append(chain)
-								tmp_jp_pair.append([chain[0], chain[-1]])
 							else:
 								tmp_roop.append(chain)
 						else:
 							tmp_dangling.append(chain)
 		# 重複を除く
-		# print(len(tmp_strand), len(tmp_jp_pair))
 		strand.append([mol, remove_duplicate(tmp_strand)])
-		N_strand += len(strand[-1][1])
+		var.N_strand += len(strand[-1][1])
 		dangling.append([mol, remove_duplicate(tmp_dangling)])
-		N_dangling += len(dangling[-1][1])
+		var.N_dangling += len(dangling[-1][1])
 		roop.append([mol, remove_duplicate(tmp_roop)])
-		N_roop += len(roop[-1][1])
+		var.N_roop += len(roop[-1][1])
 		jp_pair.append([mol, remove_duplicate(tmp_jp_pair)])
-		N_jp_pair += len(jp_pair[-1][1])
 		# 2つ目以降のmoleculeのatom数を調整
-		prev_mol_atoms = len(tmp_atoms)
+		prev_mol_atoms += len(tmp_atoms)
 	print()
-	print("N_strand=", N_strand, ", N_Dangling=", N_dangling, ", N_Roop=", N_roop, ", N_JP_Pair=", N_jp_pair)
-	return strand, dangling, roop, jp_pair
+	print("N_strand=", var.N_strand, ", N_Dangling=", var.N_dangling, ", N_Roop=", var.N_roop)
+	return strand, dangling, roop
 
 # 隣接するアトムを探す
 def find_next(target, tmp_bond_list):
@@ -206,7 +205,7 @@ def eval_exc_strand():
 	rec_size = var.uobj.totalRecord()
 	for record in range(1, rec_size):
 		print("Reading Rec=", record, '/', rec_size - 1)
-		strand, dangling, roop, jp_pair = make_chain_list(record)
+		strand, dangling, roop = make_chain_list(record)
 		n_strand=0
 		for each in strand:
 			n_strand+=len(each[1])
@@ -989,7 +988,55 @@ def modify(data_list):
 	# save_data(mod_gt, 'mod_gt.dat')
 	return mod_gt
 
+def make_data():
+	contents = '''
+	\\begin{def}
+		TargetCond:{
+			NetWork:{
+				Function: int "ストランドの数",
+				N_Segments: int "ストランド中のセグメント数"
+				} "ネットワークの条件を設定"
+			Exchanged:{
+				N_Strands: int "交換後のストランド数",
+				N_Danglings: int "交換後のダングリング数",
+				N_Roops: int "交換後のループ数",
+			}
+			System:{
+				SystemSize: float,
+				Nu: float
+			}
+			} "計算ターゲットの条件を設定"
 
+	\end{def}
+
+	\\begin{data}
+		TargetCond:{
+			{4, 0}
+			{1, 1, 1}
+			{1., 1.}
+			}
+		\end{data}
+	'''
+	###
+	with codecs.open(os.path.join(var.target_name, 'target_condition.udf'), 'w', 'utf_8') as f:
+		f.write(contents)
+	###
+	u = UDFManager(os.path.join(var.target_name, 'target_condition.udf'))
+	u.jump(-1)
+	##################
+	u.put(var.func, 'TargetCond.NetWork.Function')
+	u.put(var.n_seg, 'TargetCond.NetWork.N_Segments')
+
+	u.put(var.N_strand, 'TargetCond.Exchanged.N_Strands')
+	u.put(var.N_dangling, 'TargetCond.Exchanged.N_Danglings')
+	u.put(var.N_roop, 'TargetCond.Exchanged.N_Roops')
+
+	u.put(var.system, 'TargetCond.System.SystemSize')
+	u.put(var.N_strand/(var.system)**3., 'TargetCond.System.Nu')
+	##################
+	u.write()
+
+	return
 
 
 

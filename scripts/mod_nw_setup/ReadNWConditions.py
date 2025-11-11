@@ -531,7 +531,7 @@ def make_cond_udf():
 				} "シミュレーションの条件を設定"
 			NetWork:{
 				Strand: string "分岐の数と種類",
-				N_Strands: int "ストランドの数"
+				Function: int "分岐数"
 				N_Segments: int "ストランド中のセグメント数", 
 				N_Subchain: int "各セグメントの側鎖の数", 
 				N_UnitCells: int "一辺あたりのユニットセルの数"
@@ -606,7 +606,7 @@ def make_cond_udf():
 	u.put([], 'TargetCond.Model.SelectedValue[]')
 
 	u.put(var.strand, 'TargetCond.NetWork.Strand')
-	u.put(var.n_strand, 'TargetCond.NetWork.N_Strands')
+	u.put(var.n_strand, 'TargetCond.NetWork.Function')
 	u.put(var.n_segments, 'TargetCond.NetWork.N_Segments')
 	u.put(var.n_sc, 'TargetCond.NetWork.N_Subchain')
 	u.put(var.n_cell, 'TargetCond.NetWork.N_UnitCells')

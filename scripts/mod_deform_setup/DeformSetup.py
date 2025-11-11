@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##### Import #####
+import os
+
 import mod_deform_setup.DeformSetupSimple as simple
 import mod_deform_setup.DeformSetupCyclic as cyclic
 import mod_deform_setup.DeformSetupStep as step

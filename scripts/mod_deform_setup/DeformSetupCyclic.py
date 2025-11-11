@@ -18,7 +18,7 @@ def setup_cyclic_deform():
 	return
 
 def set_cyclic_basedir():
-	var.cyc_dir = var.cyclic_deform + '_read_' + var.read_udf.split('.')[0]
+	var.cyc_dir = f"Deform_read_{var.base_name:}/{var.cyclic_deform:}"
 	if os.path.exists(var.cyc_dir):
 		print("Use existing dir of ", var.cyc_dir)
 	else:
