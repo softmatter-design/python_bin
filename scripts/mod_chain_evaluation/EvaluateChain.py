@@ -98,6 +98,7 @@ def make_chain_list(record):
 	atoms = var.uobj.get("Set_of_Molecules.molecule[].atom[]")
 	bonds = var.uobj.get("Set_of_Molecules.molecule[].bond[]")
 	#
+	var.N_strand = var.N_dangling = var.N_roop = 0
 	prev_mol_atoms = 0
 	for mol, mol_list in enumerate(mols):
 		tmp_strand = []
