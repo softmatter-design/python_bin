@@ -590,18 +590,18 @@ def script_content():
 	#
 	if var.base_name == "angle":
 		if var.option != "box":
-			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w l noti'
+			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w l noti' + '\n'
 		else:
 			script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
-			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w boxes noti'
+			script += 'plot data u 1:($2/(3.142*sin(3.142*$1/180))) w boxes noti'+ '\n'
 	#
 	if var.base_name== "bond":
 		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
-		script += '#\nplot data w boxes noti'
+		script += '#\nplot data w boxes noti'+ '\n'
 	#
 	elif var.option == "box":
 		script += 'set style fill solid 0.5\nset boxwidth ' + str(var.bin_width) + '\n'
-		script += '#\nplot data w boxes noti'
+		script += '#\nplot data w boxes noti'+ '\n'
 		
 	return script
 
