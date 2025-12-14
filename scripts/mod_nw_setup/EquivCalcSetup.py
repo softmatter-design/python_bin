@@ -235,7 +235,7 @@ def post_calc(pre, template, batch):
 				fn_ext = ['Exchange_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
 				f_eval = 1
 				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				eq_setup2(template, pre, present_udf, var.exchange_eqn_time)
+				eq_setup3(template, pre, present_udf, var.exchange_eqn_time)
 				pre = read_udf
 				template = present_udf
 	return batch
@@ -793,6 +793,7 @@ def eq_setup2(template, read_udf, present_udf, time):
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
 	u.put(1, p + 'Relaxation')
+	u.put(1000, p + 'Max_Relax_Force')
 
 	#--- Simulation_Conditions ---
 	# Bond
