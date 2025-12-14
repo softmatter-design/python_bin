@@ -766,7 +766,7 @@ def exchange_setup(template, read_udf, present_udf, item):
 	return
 
 #####################################################
-# 直前の条件を維持して平衡化
+# 結合交換後にボンドをハーモニックにして、緩和後に平衡化
 def eq_setup2(template, read_udf, present_udf, time):
 	u = UDFManager(os.path.join(var.target_dir, template))
 	u.jump(-1)
@@ -792,7 +792,65 @@ def eq_setup2(template, read_udf, present_udf, time):
 	u.put('Restart', p+'Method')
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
+	u.put(1, p + 'Relaxation')
+
+	#--- Simulation_Conditions ---
+	# Bond
+	p = 'Molecular_Attributes.Bond_Potential[].'		
+	for i, bondname in enumerate(var.bond_name):
+		u.put(bondname, 	p + 'Name', [i])
+		u.put('Harmonic', 	p + 'Potential_Type', [i])
+		u.put(0.97,			p + 'R0', [i])
+		u.put(1000, 		p + 'Harmonic.K', [i])
+
+	# Calc Exchange
+	u.put('OFF', 'React_Conditions.React_Flag')
+
+	#--- Write UDF ---
+	u.write(os.path.join(var.target_dir, present_udf))
+	return
+
+#####################################################
+# 結合交換、ポスト安定化後にボンド条件を戻してから平衡化
+def eq_setup3(template, read_udf, present_udf, time):
+	u = UDFManager(os.path.join(var.target_dir, template))
+	u.jump(-1)
+	#--- Simulation_Conditions ---
+	# Dynamics_Conditions
+	p = 'Simulation_Conditions.Dynamics_Conditions.'
+	u.put(time[0],  p+'Time.delta_T')
+	u.put(time[1],  p+'Time.Total_Steps')
+	u.put(time[2],  p+'Time.Output_Interval_Steps')
+	# Moment
+	u.put(0, p + "Moment.Interval_of_Calc_Moment")
+	u.put(0, p + "Moment.Calc_Moment")
+	u.put(0, p + "Moment.Stop_Translation")
+	u.put(0, p + "Moment.Stop_Rotation")
+
+	#--- Initial_Structure ---
+	#
+	p = 'Initial_Structure.Read_Set_of_Molecules.'
+	u.put(read_udf, p+'UDF_Name')
+	u.put(1000, p+'Record')
+	# Generate_Method
+	p = 'Initial_Structure.Generate_Method.'
+	u.put('Restart', p+'Method')
+	u.put([read_udf, -1, 1, 0], p+'Restart')
+	p = 'Initial_Structure.Relaxation.'
 	u.put(0, p + 'Relaxation')
+
+	#--- Simulation_Conditions ---
+	# Bond
+	if var.strand_type == 'KG' or var.strand_type == 'FENE':
+		p = 'Molecular_Attributes.Bond_Potential[].'		
+		for i, bondname in enumerate(var.bond_name):
+			u.put(bondname, 	p + 'Name', [i])
+			u.put('FENE_LJ', 	p + 'Potential_Type', [i])
+			u.put(1.0,			p + 'R0', [i])
+			u.put(1.5,			p + 'FENE_LJ.R_max', [i])
+			u.put(30,			p + 'FENE_LJ.K', [i])
+			u.put(1.0,			p + 'FENE_LJ.sigma', [i])
+			u.put(1.0,			p + 'FENE_LJ.epsilon', [i])
 
 	# Calc Exchange
 	u.put('OFF', 'React_Conditions.React_Flag')
