@@ -98,7 +98,25 @@ def makenewudf():
 					Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
 					} "GreenKubo により、応力緩和関数を計算するかどうかを決める。"
 				}
-			Exchange:{
+			Exchange1:{
+				Calc:select{"Yes", "No"},
+				Yes:{
+					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
+					Dissociate_cond[]:{
+									Scission_length: double "ボンド切断距離",
+									Creation_Int: int "ボンド生成頻度",
+									Creation_Prob: double "ボンド生成確率", 
+									Creation_Threshold: double "ボンド生成距離",
+									Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "時間条件を入力"
+									},
+					Post_time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "後処理の時間条件を入力",
+					Eqn_Condition:{
+									Repeat: int "平衡化計算の繰り返し数",
+									Time:{delta_T: double, Total_Steps: int, Output_Interval_Steps: int} "平衡化計算の時間条件を入力"
+									} "平衡化計算条件を入力"
+					} "結合交換反応の条件を設定"
+				}
+			Exchange2:{
 				Calc:select{"Yes", "No"},
 				Yes:{
 					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
@@ -136,6 +154,12 @@ def makenewudf():
 		SimulationCond:{
 			{3,{1.0e-02,1000000,10000}}
 			{"No",{5,{1.0e-02,1000000,10000}}}
+			{"Yes",
+				{"single", [{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}],
+				{1.0e-3, 100000, 1000},
+				{3,{1.0e-02,1000000,10000}}
+				}
+			}
 			{"Yes",
 				{"single", [{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}],
 				{1.0e-3, 100000, 1000},
@@ -278,28 +302,25 @@ def readconditionudf():
 		var.greenkubo_repeat = u.get('SimulationCond.GreenKubo.Yes.Repeat')
 		var.greenkubo_time = u.get('SimulationCond.GreenKubo.Yes.Time')
 	#####
-	var.exchange=u.get('SimulationCond.Exchange.Calc')
-	# var.exchange_repeat=1
-	# var.exchange_target='single'
-	# var.exchange_sci_len=1.0
-	# var.exchange_int=10
-	# var.exchange_prob=1.0
-	# var.exchange_thr=1.0
-	# var.exchange_time=[]
-	if var.exchange=='Yes':
-		var.exchange_target=u.get('SimulationCond.Exchange.Yes.Target')
-		var.exchange_cond = u.get('SimulationCond.Exchange.Yes.Dissociate_cond[]')
+	var.exchange1=u.get('SimulationCond.Exchange1.Calc')
+	var.exchange2=u.get('SimulationCond.Exchange2.Calc')
 
-			# print(dissociate_cond)
-			# var.exchange_sci_len=dissociate_cond[0]
-			# var.exchange_int=dissociate_cond[1]
-			# var.exchange_prob=dissociate_cond[2]
-			# var.exchange_thr=dissociate_cond[3]
-			# var.exchange_time=dissociate_cond[4]
-		var.exchange_post_time = u.get('SimulationCond.Exchange.Yes.Post_time')
+	if var.exchange1=='Yes':
+		var.exchange1_target=u.get('SimulationCond.Exchange1.Yes.Target')
+		var.exchange1_cond = u.get('SimulationCond.Exchange1.Yes.Dissociate_cond[]')
 		#
-		var.exchange_eqn_repeat = u.get('SimulationCond.Exchange.Yes.Eqn_Condition.Repeat')
-		var.exchange_eqn_time = u.get('SimulationCond.Exchange.Yes.Eqn_Condition.Time')
+		var.exchange1_post_time = u.get('SimulationCond.Exchange1.Yes.Post_time')
+		#
+		var.exchange1_eqn_repeat = u.get('SimulationCond.Exchange1.Yes.Eqn_Condition.Repeat')
+		var.exchange1_eqn_time = u.get('SimulationCond.Exchange1.Yes.Eqn_Condition.Time')
+	if var.exchange2=='Yes':
+		var.exchange2_target=u.get('SimulationCond.Exchange2.Yes.Target')
+		var.exchange2_cond = u.get('SimulationCond.Exchange2.Yes.Dissociate_cond[]')
+		#
+		var.exchange2_post_time = u.get('SimulationCond.Exchange2.Yes.Post_time')
+		#
+		var.exchange2_eqn_repeat = u.get('SimulationCond.Exchange2.Yes.Eqn_Condition.Repeat')
+		var.exchange2_eqn_time = u.get('SimulationCond.Exchange2.Yes.Eqn_Condition.Time')
 	#####
 	var.l_bond = u.get('SimulationCond.l_bond')
 	#####
@@ -481,9 +502,9 @@ def init_calc():
 		text += "#\n応力緩和計算繰り返し:\t\t" + str(var.greenkubo_repeat) + "\n"
 		text += "応力緩和時間条件:\t" + str(var.greenkubo_time) + "\n"
 	#
-	if var.exchange=='Yes':
-		text += "結合交換対象ボンド:\t\t" + str(var.exchange_target) + "\n"
-		for i, item in enumerate(var.exchange_cond):
+	if var.exchange1=='Yes':
+		text += "結合交換対象ボンド:\t\t" + str(var.exchange1_target) + "\n"
+		for i, item in enumerate(var.exchange1_cond):
 			text += "## " + str(i) + " ##\n"
 			text += "結合切断距離:\t\t\t" + str(item[0]) + "\n"
 			text += "結合生成インターバル:\t\t" + str(item[1]) + "\n"
@@ -491,10 +512,25 @@ def init_calc():
 			text += "結合生成距離:\t\t\t" + str(item[3]) + "\n"
 			text += "結合交換計算時間:\t" + str(item[4]) + "\n"
 		text += "#####\n"
-		text += "ポスト処理:\t\t" + str(var.exchange_post_time) + "\n"
+		text += "ポスト処理:\t\t" + str(var.exchange1_post_time) + "\n"
 		text += "##" + "\n"
-		text += "交換後_平衡化繰り返し:\t\t" + str(var.exchange_eqn_repeat) + "\n"
-		text += "交換後_平衡化時間条件:\t" + str(var.exchange_eqn_time) + "\n"
+		text += "交換後_平衡化繰り返し:\t\t" + str(var.exchange1_eqn_repeat) + "\n"
+		text += "交換後_平衡化時間条件:\t" + str(var.exchange1_eqn_time) + "\n"
+	if var.exchange2=='Yes':
+		text += "2 ############################################" + "\n"
+		text += "結合交換対象ボンド:\t\t" + str(var.exchange2_target) + "\n"
+		for i, item in enumerate(var.exchange2_cond):
+			text += "## " + str(i) + " ##\n"
+			text += "結合切断距離:\t\t\t" + str(item[0]) + "\n"
+			text += "結合生成インターバル:\t\t" + str(item[1]) + "\n"
+			text += "結合生成確率:\t\t\t" + str(item[2]) + "\n"
+			text += "結合生成距離:\t\t\t" + str(item[3]) + "\n"
+			text += "結合交換計算時間:\t" + str(item[4]) + "\n"
+		text += "#####\n"
+		text += "ポスト処理:\t\t" + str(var.exchange2_post_time) + "\n"
+		text += "##" + "\n"
+		text += "交換後_平衡化繰り返し:\t\t" + str(var.exchange2_eqn_repeat) + "\n"
+		text += "交換後_平衡化時間条件:\t" + str(var.exchange2_eqn_time) + "\n"
 
 	text += "##############################################" + "\n"
 	text += "ストランドの数密度:\t\t" + str(round(var.nu, 5)) + "\n"

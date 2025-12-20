@@ -38,14 +38,19 @@ greenkubo = ''
 greenkubo_repeat = 1
 greenkubo_time = []
 
-exchange=''
-exchange_target=''
-exchange_cond=[]
+exchange1=''
+exchange1_target=''
+exchange1_cond=[]
+exchange1_post_time = []
+exchange1_eqn_repeat = 1
+exchange1_eqn_time = []
 
-exchange_post_time = []
-
-exchange_eqn_repeat = 1
-exchange_eqn_time = []
+exchange2=''
+exchange2_target=''
+exchange2_cond=[]
+exchange2_post_time = []
+exchange2_eqn_repeat = 1
+exchange2_eqn_time = []
 
 
 # mod_cond = [n_chains, n_beads_unit, e2e, org_unitcell]

@@ -210,35 +210,67 @@ def post_calc(pre, template, batch):
 			pre = read_udf
 			template = present_udf
 	# 結合交換
-	if var.exchange=='Yes':
-		for i, item in enumerate(var.exchange_cond):
+	if var.exchange1=='Yes':
+		for i, item in enumerate(var.exchange1_cond):
 			# 結合交換
 			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i))
-			fn_ext = ['Exchange_' + str(i) + "_", "uin.udf"]
+			fn_ext = ['Exchange_1st_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			exchange_setup(template, pre, present_udf, item)
+			exchange_setup(template, pre, present_udf, item, var.exchange1_target)
 			pre = read_udf
 			template = present_udf
 			# ポスト処理
 			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_post")
-			fn_ext = ['Exchange_' + str(i) + "_post_", "uin.udf"]
+			fn_ext = ['Exchange_1st_' + str(i) + "_post_", "uin.udf"]
 			f_eval = 0
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			eq_setup2(template, pre, present_udf, var.exchange_post_time)
+			eq_setup2(template, pre, present_udf, var.exchange1_post_time)
 			pre = read_udf
 			template = present_udf
 			# 平衡化計算
-			for j in range(var.exchange_eqn_repeat):
+			for j in range(var.exchange1_eqn_repeat):
 				# 平衡化
 				batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_eqn_" + str(j))
-				fn_ext = ['Exchange_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
+				fn_ext = ['Exchange_1st_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
 				f_eval = 1
 				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-				eq_setup3(template, pre, present_udf, var.exchange_eqn_time)
+				eq_setup3(template, pre, present_udf, var.exchange1_eqn_time)
 				pre = read_udf
 				template = present_udf
+
+	if var.exchange2=='Yes':
+		for i, item in enumerate(var.exchange2_cond):
+			# 結合交換
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i))
+			fn_ext = ['Exchange_2nd_' + str(i) + "_", "uin.udf"]
+			f_eval = 2
+			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+			exchange_setup(template, pre, present_udf, item, var.exchange2_target)
+			pre = read_udf
+			template = present_udf
+			# ポスト処理
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_post")
+			fn_ext = ['Exchange_2nd_' + str(i) + "_post_", "uin.udf"]
+			f_eval = 0
+			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+			eq_setup2(template, pre, present_udf, var.exchange2_post_time)
+			pre = read_udf
+			template = present_udf
+			# 平衡化計算
+			for j in range(var.exchange2_eqn_repeat):
+				# 平衡化
+				batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_eqn_" + str(j))
+				fn_ext = ['Exchange_2nd_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
+				f_eval = 1
+				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+				eq_setup3(template, pre, present_udf, var.exchange2_eqn_time)
+				pre = read_udf
+				template = present_udf
+
 	return batch
+
+	
 
 ###############
 # UDF 作成条件
@@ -703,17 +735,17 @@ def greenkubo_setup(template, read_udf, present_udf, time):
 	return
 
 ###########################################################
-# 結合交換
-def exchange_setup(template, read_udf, present_udf, item):
+# ボンドをハーモニックにして、結合交換
+def exchange_setup(template, read_udf, present_udf, item, exchange_target):
 	exchange_sci_len=item[0]
 	exchange_int=item[1]
 	exchange_prob=item[2]
 	exchange_thr=item[3]
 	exchange_time=item[4]
-	if var.exchange_target == 'single':
+	if exchange_target == 'single':
 		atom = 'Dis_S'
 		bond = 'bond_DS'
-	elif var.exchange_target == 'double':
+	elif exchange_target == 'double':
 		atom = 'Dis_D'
 		bond = 'bond_DD'
 	u = UDFManager(os.path.join(var.target_dir, template))
@@ -724,6 +756,16 @@ def exchange_setup(template, read_udf, present_udf, item):
 	u.put(exchange_time[0],  p+'Time.delta_T')
 	u.put(exchange_time[1],  p+'Time.Total_Steps')
 	u.put(exchange_time[2],  p+'Time.Output_Interval_Steps')
+
+	#--- Simulation_Conditions ---
+	# Bond
+	p = 'Molecular_Attributes.Bond_Potential[].'		
+	for i, bondname in enumerate(var.bond_name):
+		u.put(bondname, 	p + 'Name', [i])
+		u.put('Harmonic', 	p + 'Potential_Type', [i])
+		u.put(0.97,			p + 'R0', [i])
+		u.put(1000, 		p + 'Harmonic.K', [i])
+
 	# Calc Exchange
 	u.put('ON', 'React_Conditions.React_Flag')
 	#
