@@ -183,7 +183,7 @@ def npt_calc(batch):
 	pre = read_udf
 	template = present_udf
 	#
-	post_calc(pre, template, batch)
+	batch = post_calc(pre, template, batch)
 
 	return batch
 
