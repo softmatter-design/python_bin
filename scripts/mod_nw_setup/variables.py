@@ -39,6 +39,7 @@ greenkubo_repeat = 1
 greenkubo_time = []
 
 exchange1=''
+exchange1_repeat = 1
 exchange1_target=''
 exchange1_cond=[]
 exchange1_post_time = []
@@ -46,6 +47,7 @@ exchange1_eqn_repeat = 1
 exchange1_eqn_time = []
 
 exchange2=''
+exchange2_repeat = 1
 exchange2_target=''
 exchange2_cond=[]
 exchange2_post_time = []
@@ -55,6 +57,7 @@ exchange2_eqn_time = []
 
 # mod_cond = [n_chains, n_beads_unit, e2e, org_unitcell]
 n_chains = 1
+n_jp = 1
 n_beads_unit = 1
 e2e = 1.0
 org_unitcell = 1.0
@@ -68,6 +71,7 @@ system = 1.0
 unit_cell = 1.0
 total_net_atom = 1
 nu = 1.0
+d_jp = 1
 
 target_dir = ''
 target_name = ''

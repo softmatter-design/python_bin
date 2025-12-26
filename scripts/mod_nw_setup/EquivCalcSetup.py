@@ -211,17 +211,17 @@ def post_calc(pre, template, batch):
 			template = present_udf
 	# 結合交換
 	if var.exchange1=='Yes':
-		for i, item in enumerate(var.exchange1_cond):
+		for i in range(var.exchange1_repeat):
 			# 結合交換
-			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i))
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_1st_" + str(i))
 			fn_ext = ['Exchange_1st_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			exchange_setup(template, pre, present_udf, item, var.exchange1_target)
+			exchange_setup(template, pre, present_udf, var.exchange1_cond, var.exchange1_target)
 			pre = read_udf
 			template = present_udf
 			# ポスト処理
-			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_post")
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_1st_" + str(i) + "_post")
 			fn_ext = ['Exchange_1st_' + str(i) + "_post_", "uin.udf"]
 			f_eval = 0
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
@@ -231,7 +231,7 @@ def post_calc(pre, template, batch):
 			# 平衡化計算
 			for j in range(var.exchange1_eqn_repeat):
 				# 平衡化
-				batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_eqn_" + str(j))
+				batch = make_title(batch, var.target_name + "Calculating-Exchange_1st_" + str(i) + "_eqn_" + str(j))
 				fn_ext = ['Exchange_1st_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
 				f_eval = 1
 				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
@@ -240,17 +240,17 @@ def post_calc(pre, template, batch):
 				template = present_udf
 
 	if var.exchange2=='Yes':
-		for i, item in enumerate(var.exchange2_cond):
+		for i in range(var.exchange2_repeat):
 			# 結合交換
-			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i))
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_2nd_" + str(i))
 			fn_ext = ['Exchange_2nd_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
-			exchange_setup(template, pre, present_udf, item, var.exchange2_target)
+			exchange_setup(template, pre, present_udf, var.exchange2_cond, var.exchange2_target)
 			pre = read_udf
 			template = present_udf
 			# ポスト処理
-			batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_post")
+			batch = make_title(batch, var.target_name + "Calculating-Exchange_2nd_" + str(i) + "_post")
 			fn_ext = ['Exchange_2nd_' + str(i) + "_post_", "uin.udf"]
 			f_eval = 0
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
@@ -260,7 +260,7 @@ def post_calc(pre, template, batch):
 			# 平衡化計算
 			for j in range(var.exchange2_eqn_repeat):
 				# 平衡化
-				batch = make_title(batch, var.target_name + "Calculating-Exchange_" + str(i) + "_eqn_" + str(j))
+				batch = make_title(batch, var.target_name + "Calculating-Exchange_2nd_" + str(i) + "_eqn_" + str(j))
 				fn_ext = ['Exchange_2nd_' + str(i) + "_eqn_" + str(j) + "_", "uin.udf"]
 				f_eval = 1
 				present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)

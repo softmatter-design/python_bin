@@ -101,8 +101,9 @@ def makenewudf():
 			Exchange1:{
 				Calc:select{"Yes", "No"},
 				Yes:{
+					Repeat:int "計算の繰り返し数",
 					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
-					Dissociate_cond[]:{
+					Dissociate_cond:{
 									Scission_length: double "ボンド切断距離",
 									Creation_Int: int "ボンド生成頻度",
 									Creation_Prob: double "ボンド生成確率", 
@@ -119,8 +120,9 @@ def makenewudf():
 			Exchange2:{
 				Calc:select{"Yes", "No"},
 				Yes:{
+					Repeat:int "計算の繰り返し数",
 					Target:select{"single", "double"} "ストランド中の結合交換基の選択",
-					Dissociate_cond[]:{
+					Dissociate_cond:{
 									Scission_length: double "ボンド切断距離",
 									Creation_Int: int "ボンド生成頻度",
 									Creation_Prob: double "ボンド生成確率", 
@@ -143,7 +145,7 @@ def makenewudf():
 		TargetCond:{
 			{"Regular", {"4_Chain"}{"4_Chain","Read",{1000,100,100,10,1}{"4_chains_3_cells_100_sampling_100_trials_10_times"}100}}
 			{20, 0, 3}
-			{"KG"}
+			{"FENE"}
 			{"Set", {3}{0.85}}
 			{"Yes", {"Density", {0.85}{1.0}}}
 			{"Entangled",
@@ -155,13 +157,13 @@ def makenewudf():
 			{3,{1.0e-02,1000000,10000}}
 			{"No",{5,{1.0e-02,1000000,10000}}}
 			{"Yes",
-				{"single", [{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}],
+				{5, "single", {1.18, 1, 1.0, 1.2, {1.0e-03,10000000,100000}},
 				{1.0e-3, 100000, 1000},
 				{3,{1.0e-02,1000000,10000}}
 				}
 			}
 			{"Yes",
-				{"single", [{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}, {1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}},{1.15, 1, 0.2, 1.15, {1.0e-03,10000000,100000}}],
+				{5, "single", {1.18, 1, 1.0, 1.2, {1.0e-03,10000000,100000}},
 				{1.0e-3, 100000, 1000},
 				{3,{1.0e-02,1000000,10000}}
 				}
@@ -306,16 +308,18 @@ def readconditionudf():
 	var.exchange2=u.get('SimulationCond.Exchange2.Calc')
 
 	if var.exchange1=='Yes':
+		var.exchange1_repeat=u.get('SimulationCond.Exchange1.Yes.Repeat')
 		var.exchange1_target=u.get('SimulationCond.Exchange1.Yes.Target')
-		var.exchange1_cond = u.get('SimulationCond.Exchange1.Yes.Dissociate_cond[]')
+		var.exchange1_cond = u.get('SimulationCond.Exchange1.Yes.Dissociate_cond')
 		#
 		var.exchange1_post_time = u.get('SimulationCond.Exchange1.Yes.Post_time')
 		#
 		var.exchange1_eqn_repeat = u.get('SimulationCond.Exchange1.Yes.Eqn_Condition.Repeat')
 		var.exchange1_eqn_time = u.get('SimulationCond.Exchange1.Yes.Eqn_Condition.Time')
 	if var.exchange2=='Yes':
+		var.exchange2_repeat=u.get('SimulationCond.Exchange1.Yes.Repeat')
 		var.exchange2_target=u.get('SimulationCond.Exchange2.Yes.Target')
-		var.exchange2_cond = u.get('SimulationCond.Exchange2.Yes.Dissociate_cond[]')
+		var.exchange2_cond = u.get('SimulationCond.Exchange2.Yes.Dissociate_cond')
 		#
 		var.exchange2_post_time = u.get('SimulationCond.Exchange2.Yes.Post_time')
 		#
@@ -351,27 +355,33 @@ def set_length():
 	if var.nw_model == "Regular":
 		if var.strand == "3_Chain_S":
 			var.n_chains = 12						        					# サブチェインの本数
+			var.n_jp = 8
 			var.n_beads_unit = 8 + var.n_segments*(1 + var.n_sc)*var.n_chains		# ユニットセル当たりの粒子数
 			var.org_unitcell = (2*2**0.5)*var.e2e				        			# 理想鎖状態でのユニットセル長
 		elif var.strand == "3_Chain_D":
 			var.n_chains = 24						       
+			var.n_jp = 16
 			var.n_beads_unit = 16 + var.n_segments*(1 + var.n_sc)*var.n_chains	
 			var.org_unitcell = (2*2**0.5)*var.e2e		
 		elif var.strand == "4_Chain":
-			var.n_chains = 16						      
+			var.n_chains = 16
+			var.n_jp = 8			      
 			var.n_beads_unit = 8 + var.n_segments*(1 + var.n_sc)*var.n_chains	
 			var.org_unitcell = (4*3**0.5)*var.e2e/3			 
 		elif var.strand == "6_Chain":
-			var.n_chains = 3						  
+			var.n_chains = 3
+			var.n_jp = 1
 			var.n_beads_unit = 1 + var.n_segments*(1 + var.n_sc)*var.n_chains		
 			var.org_unitcell = var.e2e						      
 		elif var.strand == "8_Chain":
-			var.n_chains = 8						   
+			var.n_chains = 8
+			var.n_jp = 2 
 			var.n_beads_unit = 2 + var.n_segments*(1 + var.n_sc)*var.n_chains   
 			var.org_unitcell = (2*3**0.5)*var.e2e/3	
 
 	elif var.nw_model == "Random":
 		var.n_chains = var.n_strand
+		var.n_jp = 2
 		var.n_beads_unit = 2 + var.n_segments*(1 + var.n_sc)*var.n_chains
 		var.org_unitcell = (2*3**0.5)*var.e2e/3	
 
@@ -437,6 +447,7 @@ def init_calc():
 				mod_e2e = var.shrinkage*var.e2e											# 収縮後の末端間距離
 				var.unit_cell = mod_unitcell
 				var.nu = var.n_chains*var.multi_org/var.unit_cell**3
+				var.d_jp = var.n_jp*var.multi_org/var.unit_cell**3
 				var.density_mod = var.density_org
 	else:
 		sys.exit("Something Wrong!!")
@@ -503,29 +514,28 @@ def init_calc():
 		text += "応力緩和時間条件:\t" + str(var.greenkubo_time) + "\n"
 	#
 	if var.exchange1=='Yes':
+		text += "## 結合交換 1 ##\n"
+		text += "結合交換繰り返し:\t\t" + str(var.exchange1_repeat) + "\n"
 		text += "結合交換対象ボンド:\t\t" + str(var.exchange1_target) + "\n"
-		for i, item in enumerate(var.exchange1_cond):
-			text += "## " + str(i) + " ##\n"
-			text += "結合切断距離:\t\t\t" + str(item[0]) + "\n"
-			text += "結合生成インターバル:\t\t" + str(item[1]) + "\n"
-			text += "結合生成確率:\t\t\t" + str(item[2]) + "\n"
-			text += "結合生成距離:\t\t\t" + str(item[3]) + "\n"
-			text += "結合交換計算時間:\t" + str(item[4]) + "\n"
+		text += "結合切断距離:\t\t\t" + str(var.exchange1_cond[0]) + "\n"
+		text += "結合生成インターバル:\t\t" + str(var.exchange1_cond[1]) + "\n"
+		text += "結合生成確率:\t\t\t" + str(var.exchange1_cond[2]) + "\n"
+		text += "結合生成距離:\t\t\t" + str(var.exchange1_cond[3]) + "\n"
+		text += "結合交換計算時間:\t" + str(var.exchange1_cond[4]) + "\n"
 		text += "#####\n"
 		text += "ポスト処理:\t\t" + str(var.exchange1_post_time) + "\n"
 		text += "##" + "\n"
 		text += "交換後_平衡化繰り返し:\t\t" + str(var.exchange1_eqn_repeat) + "\n"
 		text += "交換後_平衡化時間条件:\t" + str(var.exchange1_eqn_time) + "\n"
 	if var.exchange2=='Yes':
-		text += "2 ############################################" + "\n"
+		text += "## 結合交換 2 ##\n"
+		text += "結合交換繰り返し:\t\t" + str(var.exchange2_repeat) + "\n"
 		text += "結合交換対象ボンド:\t\t" + str(var.exchange2_target) + "\n"
-		for i, item in enumerate(var.exchange2_cond):
-			text += "## " + str(i) + " ##\n"
-			text += "結合切断距離:\t\t\t" + str(item[0]) + "\n"
-			text += "結合生成インターバル:\t\t" + str(item[1]) + "\n"
-			text += "結合生成確率:\t\t\t" + str(item[2]) + "\n"
-			text += "結合生成距離:\t\t\t" + str(item[3]) + "\n"
-			text += "結合交換計算時間:\t" + str(item[4]) + "\n"
+		text += "結合切断距離:\t\t\t" + str(var.exchange2_cond[0]) + "\n"
+		text += "結合生成インターバル:\t\t" + str(var.exchange2_cond[1]) + "\n"
+		text += "結合生成確率:\t\t\t" + str(var.exchange2_cond[2]) + "\n"
+		text += "結合生成距離:\t\t\t" + str(var.exchange2_cond[3]) + "\n"
+		text += "結合交換計算時間:\t" + str(var.exchange2_cond[4]) + "\n"
 		text += "#####\n"
 		text += "ポスト処理:\t\t" + str(var.exchange2_post_time) + "\n"
 		text += "##" + "\n"
@@ -534,6 +544,7 @@ def init_calc():
 
 	text += "##############################################" + "\n"
 	text += "ストランドの数密度:\t\t" + str(round(var.nu, 5)) + "\n"
+	text += "架橋点の数密度:\t\t\t" + str(round(var.d_jp, 5)) + "\n"
 	text += "##############################################" + "\n"
 	print(text)
 
@@ -595,6 +606,7 @@ def make_cond_udf():
 				Total_Segments: int "全セグメント数",
 				SystemSize: float,
 				Nu: float
+				d_jp: float
 			}
 			} "計算ターゲットの条件を設定"
 		SimulationCond:{
@@ -617,7 +629,7 @@ def make_cond_udf():
 			{1}
 			{1.0, 0.85}
 			{""}
-			{1, 1., 1.}
+			{1, 1., 1.,1.}
 			}
 		SimulationCond:{
 			{4,{1.0e-02,100000,1000}}
@@ -675,6 +687,7 @@ def make_cond_udf():
 	u.put(var.total_net_atom, 'TargetCond.System.Total_Segments')
 	u.put(var.system, 'TargetCond.System.SystemSize')
 	u.put(var.nu, 'TargetCond.System.Nu')
+	u.put(var.d_jp, 'TargetCond.System.d_jp')
 	###################
 	u.put(var.eqn_repeat, 'SimulationCond.Eqn_Condition.repeat')
 	u.put(var.eqn_time[0], 'SimulationCond.Eqn_Condition.Time.delta_T')
