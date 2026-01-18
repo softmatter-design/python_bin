@@ -28,8 +28,6 @@ def set_simple_eachrate():
 		print("Make new dir of ", var.simple_basedir)
 		os.makedirs(var.simple_basedir)
 
-	c_dir = os.getcwd().split('\\')[-1]
-	var.title_base = str(c_dir.split('_', 2)[-1]) + f"_{var.sim_deform:}_calculation_until_{var.sim_deform_max:}_"
 	# プラットフォームに応じて命令を変更
 	if platform.system() == "Windows":
 		task = 'call calc_series.bat\n'
@@ -76,7 +74,7 @@ def set_rotation_simple():
 
 def set_rotate_dir_sim(rotate):
 	tmp_dir = f'rotate_{rotate}'
-	var.title_name = var.title_base + f"rate_{var.sim_rate:4.0e}" + f'_rotate_{rotate}'
+	var.title_name = var.title_base + f"_{var.sim_deform:}_calc_until_{var.sim_deform_max:}_rate_{var.sim_rate:4.0e}" + f'_rotate_{rotate}'
 	var.sim_dirlist.append(tmp_dir)
 	var.calc_dir = os.path.join(var.sim_ratedir, tmp_dir)
 	if os.path.exists(var.calc_dir):

@@ -217,8 +217,11 @@ def post_calc(pre, template, batch):
 			fn_ext = ['Exchange_1st_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+			if i > 0:
+				pre = pre_exc
 			exchange_setup(template, pre, present_udf, var.exchange1_cond, var.exchange1_target)
 			pre = read_udf
+			pre_exc = read_udf
 			template = present_udf
 			# ポスト処理
 			batch = make_title(batch, var.target_name + "Calculating-Exchange_1st_" + str(i) + "_post")
@@ -246,8 +249,11 @@ def post_calc(pre, template, batch):
 			fn_ext = ['Exchange_2nd_' + str(i) + "_", "uin.udf"]
 			f_eval = 2
 			present_udf, read_udf, batch = make_step(fn_ext, batch, f_eval)
+			if i > 0:
+				pre = pre_exc
 			exchange_setup(template, pre, present_udf, var.exchange2_cond, var.exchange2_target)
 			pre = read_udf
+			pre_exc = read_udf
 			template = present_udf
 			# ポスト処理
 			batch = make_title(batch, var.target_name + "Calculating-Exchange_2nd_" + str(i) + "_post")

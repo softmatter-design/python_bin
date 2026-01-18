@@ -157,13 +157,13 @@ def makenewudf():
 			{3,{1.0e-02,1000000,10000}}
 			{"No",{5,{1.0e-02,1000000,10000}}}
 			{"Yes",
-				{5, "single", {1.18, 1, 1.0, 1.2, {1.0e-03,10000000,100000}},
+				{5, "single", {1.09, 1, 0.5, 1.09, {1.0e-03,10000000,100000}},
 				{1.0e-3, 100000, 1000},
 				{3,{1.0e-02,1000000,10000}}
 				}
 			}
 			{"Yes",
-				{5, "single", {1.18, 1, 1.0, 1.2, {1.0e-03,10000000,100000}},
+				{5, "single", {1.1, 1, 1.0, 1.1, {1.0e-03,10000000,100000}},
 				{1.0e-3, 100000, 1000},
 				{3,{1.0e-02,1000000,10000}}
 				}
@@ -556,7 +556,7 @@ def init_calc():
 # 計算用のディレクトリーを作成
 def make_dir():
 	var.target_dir = f"{var.nw_model:}_{var.entanglement:}_{var.strand:}_{var.strand_type:}_N_{var.n_segments:}_Cells_{var.n_cell:}_Multi_{var.multi_mod:}"
-	var.target_name = f"{var.strand:}_{var.strand_type:}_N_{var.n_segments:}_"
+	var.target_name = f"{var.strand:}_{var.strand_type:}_N_{var.n_segments:}_M_{var.multi_org}_"
 	os.makedirs(var.target_dir, exist_ok = True)
 	make_cond_udf()
 	return

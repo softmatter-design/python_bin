@@ -115,7 +115,7 @@ def make_cycle(cyc_def_max, cyc_rate):
 		# UDFファイル名を設定
 		uin = 'No_' +str(var.cyc_count) + var.cyc_direction + "_uin.udf"
 		uout = uin.replace("uin", "out")
-		gen.make_title("Calculating_Cycle_until_" + str(cyc_def_max).replace('.', '_') + "_rate_" + f"{cyc_rate:.1e}".replace('.','_') + '_No' + str(var.cyc_count) + var.cyc_direction)
+		gen.make_title(str(var.title_base) + "_Cycle_until_" + str(cyc_def_max).replace('.', '_') + "_rate_" + f"{cyc_rate:.1e}".replace('.','_') + '_No' + str(var.cyc_count) + var.cyc_direction)
 		var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 		udf_in =  os.path.join(var.calc_dir, uin)
 		if var.cyc_count == 0 and var.cyc_direction == '_Forward':

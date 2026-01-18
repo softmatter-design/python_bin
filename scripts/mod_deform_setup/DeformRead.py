@@ -50,6 +50,7 @@ def read_nw_cond():
 		var.func = cond_u.get('TargetCond.NetWork.Function')
 		var.nu = cond_u.get('TargetCond.System.Nu')
 		var.system_size = cond_u.get('TargetCond.System.SystemSize')
+		var.title_base = os.path.basename(os.path.dirname(os.path.abspath(var.read_udf)))
 	return
 
 # シミュレーション条件を設定する。

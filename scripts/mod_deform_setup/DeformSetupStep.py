@@ -78,7 +78,7 @@ def set_udf_batch(rotate):
 	base = f'{var.step_deform}_until_' + f'{var.step_deform_max:.1e}'.replace('.', '_') + '_rate_' + f'{var.step_rate:.1e}'.replace('.', '_') + f'_{rotate}'
 	uin = 'deform_uin.udf'
 	uout = uin.replace("uin", "out")
-	gen.make_title(var.title_name + '_' + base + "_deform")
+	gen.make_title(var.title_base + '_' + base + "_deform")
 	var.batch = "#!/bin/bash\n"
 	var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 	udf_in =  os.path.join(var.calc_dir, uin)
@@ -89,7 +89,7 @@ def set_udf_batch(rotate):
 	for i, condition in enumerate(var.step_relaxation):
 		uin = f'relaxation_{i}_uin.udf'
 		uout = uin.replace("uin", "out")
-		gen.make_title(var.title_name + '_' + base + f'_relaxation_{i}')
+		gen.make_title(var.title_base + '_' + base + f'_relaxation_{i}')
 		var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 		udf_in =  os.path.join(var.calc_dir, uin)
 		make_steprelax_udf(udf_in, prev_udf, condition)
@@ -101,7 +101,7 @@ def set_udf_batch(rotate):
 		uin = f'repeat_{i}_uin.udf'
 		udf_in =  os.path.join(var.calc_dir, uin)
 		uout = uin.replace("uin", "out")
-		gen.make_title(var.title_name + '_' + base + f'_repeat_{i}')
+		gen.make_title(var.title_base + '_' + base + f'_repeat_{i}')
 		var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 		make_steprelax_udf(udf_in, prev_udf, condition)
 		prev_udf = uin.replace("uin", "out")
