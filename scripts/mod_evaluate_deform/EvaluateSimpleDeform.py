@@ -20,8 +20,8 @@ def simple_deform():
 	if var.f_average:
 		average()
 		plot_ave()
-	elif var.f_series:
-		series()
+	# elif var.f_series:
+	# 	series()
 	else:
 		file_listing()
 		calc_stress_all()
@@ -140,9 +140,10 @@ def plot():
 	plot_ss()
 	if var.simple_def_mode == 'stretch':
 		plot_mr()
+		plot_ss2()
 	return
 
-# 必要なスクリプトを作成
+# SS Curve for \lambda
 def plot_ss():
 	script_content()
 	with open(var.plt_file, 'w') as f:
@@ -179,6 +180,44 @@ def script_content():
 	var.script += '\n\nreset'
 	return
 
+# SS Curve for (\lambda-1/\lambda^2)
+def plot_ss2():
+	script = script_content2()
+	plt_file = 'plot_SS2.plt'
+	with open(plt_file, 'w') as f:
+		f.write(script)
+	#
+	if platform.system() == "Windows":
+		subprocess.call([plt_file], shell=True)
+	elif platform.system() == "Linux":
+		subprocess.call(['gnuplot ' + plt_file], shell=True)
+	return
+
+# スクリプトの中身
+def script_content2():
+	script = 'set term pngcairo font "Arial,14"\n\n'
+	script += '#set mono\nset colorsequence classic\n\n'
+	for i, filename in enumerate(var.ss_data_list):
+		script += 'data' + str(i) + ' = "' + filename + '"\n'
+	script += 'set output "SS_multi.png"\n\n'
+	script += 'set key left\nset size square\n'
+	script += 'set xlabel "Strain"\nset ylabel "Stress"\n\n'
+	script += 'G=' + str(var.nu) + '\nfunc=' + str(var.func) + '\nm=1.5\n'
+	if var.simple_def_mode == 'stretch':
+		script += '#set xrange [1:3]\n#set yrange [0.:]\n#set xtics 0.5\n#set ytics 0.01\n\n'
+		script += 'p(x)=G*(1.-2./func)*(x-1./x**2.)\n' 
+		script += 'g(x)=m*p(x)\n\n'
+	elif var.simple_def_mode == 'shear':
+		script += 'set xrange [0:1]\nset yrange [0.:]\n#set xtics 0.5\n#set ytics 0.01\n'
+		script += 'p(x)=G*(1.-2./func)*x\n\n'
+		script += 'g(x)=m*p(x)\n\n'
+	script += 'plot	'
+	for i, target in enumerate(var.ss_data_list):
+		script += 'data' + str(i) + ' w l lw 2 lt ' + str(i+1) + ' ti "rate: ' + (target.split('.')[0]).split('_')[2] + '", \\\n'
+	script += 'g(x) w l lw 2 lt 6 ti "g=1.5", \\\np(x) w l lw 2 lt 7 ti "Phantom"'
+	script += '\n\nreset'
+	return script
+
 ##############################
 # 
 def plot_mr():
@@ -194,13 +233,13 @@ def plot_mr():
 
 # 必要なスクリプトを作成
 def make_mr_script(plt_file, target):
-	script = script_content2(target)
+	script = script_content_mr(target)
 	with open(plt_file, 'w') as f:
 		f.write(script)
 	return
 
 # スクリプトの中身
-def script_content2(target):
+def script_content_mr(target):
 	script = 'set term pngcairo font "Arial,14"\n\n'
 	script += '#set mono\nset colorsequence classic\n\n'
 	script += 'data = "' + target + '"\n'

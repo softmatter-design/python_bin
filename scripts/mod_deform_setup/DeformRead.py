@@ -127,11 +127,6 @@ def make_newudf():
 					RelaxationTime:int "緩和を観測する時間",
 					CalcSteps:int "緩和時間の分割数",
 					}
-				Repeat[]:{
-					Repeat:int "繰り返し数",
-					RelaxationTime:int "緩和を観測する時間",
-					CalcSteps:int "緩和時間の分割数",
-					}
 				}
 			}
 		StepShear:{
@@ -277,10 +272,6 @@ def read_condition():
 	for data in tmp:
 		max_strain, repeat, ratelist, resolution = data
 		var.cyc_deform_cond_dic[max_strain] = [repeat, ratelist, resolution]
-		# var.cyc_deform_max_list.append(data[0])
-		# var.cyc_repeat.append(data[1])
-		# var.cyc_ratelist.append(data[2])
-		# var.cyc_resolution.append(data[3])
 	# Step Deformation
 	var.step_deform = u.get('StepDeformation.StepDeform')
 	if var.step_deform == 'StepShear':
@@ -288,7 +279,6 @@ def read_condition():
 		deform_time = var.step_deform_max/var.step_rate
 		#
 		var.step_relaxation = u.get('StepDeformation.StepShear.ShearConditions.Relaxation[]')
-		var.step_repeat = u.get('StepDeformation.StepShear.ShearConditions.Repeat[]')[0]
 	elif var.step_deform == 'StepStretch':
 		[var.step_deform_max, var.step_rate, var.step_steps] = u.get('StepDeformation.StepStretch.StretchConditions.Deformation')
 		if var.step_deform_max == 1.0:
@@ -297,7 +287,6 @@ def read_condition():
 			deform_time = abs(var.step_deform_max - 1)/var.step_rate
 		#
 		var.step_relaxation = u.get('StepDeformation.StepStretch.StretchConditions.Relaxation[]')
-		var.step_repeat = u.get('StepDeformation.StepShear.ShearConditions.Repeat[]')[0]
 	#
 	if var.step_deform != 'none':
 		dt = min(var.sim_time_div, deform_time/var.step_steps)	# dt の暫定値を決定
@@ -341,10 +330,6 @@ def init_calc():
 			text += f"Relaxation-{i:}\n"
 			text += f"\tRelaxation Time:\t\t{data[0]:.1e}\n"
 			text += f"\tCalc. steps:\t\t\t{data[1]:}\n"
-		text += "#\n"
-		text += f'Repeat:\t\t\t\t\t{var.step_repeat[0]:}\n'
-		text += f'Relaxation steps:\t\t\t{var.step_repeat[1]:.1e}\n'
-		text += f'Calc. Steps:\t\t\t\t{var.step_repeat[2]:}\n'
 		text += "################################################" + "\n"
 	print(text)
 	return
