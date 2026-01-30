@@ -105,16 +105,16 @@ def set_udf_batch(rotate):
 	# 	var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 	# 	make_steprelax_udf(udf_in, prev_udf, condition)
 	# 	prev_udf = uin.replace("uin", "out")
-	# #
-	# if platform.system() == "Windows":
-	# 	filename = 'calc_series.bat'
-	# 	path = os.path.join(globvar.bin_path, 'eval_step_def.py')
-	# 	var.batch += f'python {str(path):} -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} \n'
-	# elif platform.system() == "Linux":
-	# 	filename = 'calc_series.sh'
-	# 	var.batch += f'eval_step_def.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} \n'
-	# gen.write_batchfile(var.calc_dir, filename, var.batch)
-	# return
+	#
+	if platform.system() == "Windows":
+		filename = 'calc_series.bat'
+		path = os.path.join(globvar.bin_path, 'eval_step_def.py')
+		var.batch += f'python {str(path):} -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} \n'
+	elif platform.system() == "Linux":
+		filename = 'calc_series.sh'
+		var.batch += f'eval_step_def.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} \n'
+	gen.write_batchfile(var.calc_dir, filename, var.batch)
+	return
 
 #-----
 def make_stepdeform_udf(udf_in):

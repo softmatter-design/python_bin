@@ -204,6 +204,7 @@ def eval_chain():
 def eval_exc_strand():
 	result=[]
 	rec_size = var.uobj.totalRecord()
+	print(rec_size)
 	for record in range(1, rec_size):
 		print("Reading Rec=", record, '/', rec_size - 1)
 		strand, dangling, roop = make_chain_list(record)
