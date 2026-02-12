@@ -807,7 +807,7 @@ def exchange_setup(template, read_udf, present_udf, item, exchange_target):
 	u.put('Restart', p+'Method')
 	u.put([read_udf, -1, 1, 0], p+'Restart')
 	p = 'Initial_Structure.Relaxation.'
-	u.put(0, p + 'Relaxation')
+	u.put(1, p + 'Relaxation')
 
 	#--- Write UDF ---
 	u.write(os.path.join(var.target_dir, present_udf))

@@ -94,17 +94,6 @@ def set_udf_batch(rotate):
 		udf_in =  os.path.join(var.calc_dir, uin)
 		make_steprelax_udf(udf_in, prev_udf, condition)
 	
-	# # 最長の緩和計算のUDFをリスタートにして長時間計算を繰り返す。
-	# repeat = var.step_repeat[0]
-	# for i in range(repeat):
-	# 	condition = var.step_repeat[1:]
-	# 	uin = f'repeat_{i}_uin.udf'
-	# 	udf_in =  os.path.join(var.calc_dir, uin)
-	# 	uout = uin.replace("uin", "out")
-	# 	gen.make_title(var.title_base + '_' + base + f'_repeat_{i}')
-	# 	var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
-	# 	make_steprelax_udf(udf_in, prev_udf, condition)
-	# 	prev_udf = uin.replace("uin", "out")
 	#
 	if platform.system() == "Windows":
 		filename = 'calc_series.bat'
@@ -114,6 +103,7 @@ def set_udf_batch(rotate):
 		filename = 'calc_series.sh'
 		var.batch += f'eval_step_def.py -f {str(var.func):} -n {str(var.nu):} -m {var.sim_deform:} \n'
 	gen.write_batchfile(var.calc_dir, filename, var.batch)
+
 	return
 
 #-----

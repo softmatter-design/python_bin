@@ -4,10 +4,11 @@ func = 4
 nu = 0.1
 f_average = False
 f_series = False
-sorted_udf = []
+target_udf = ''
+target_rate = ''
+target_rotate = ''
 ss_data = []
-ss_data_list = []
-plt_file = 'plot_SS_multi.plt'
+ss_data_file = ''
 script = ''
 
 # variables for cyclic

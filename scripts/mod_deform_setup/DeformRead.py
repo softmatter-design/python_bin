@@ -289,14 +289,9 @@ def read_condition():
 		var.step_relaxation = u.get('StepDeformation.StepStretch.StretchConditions.Relaxation[]')
 	#
 	if var.step_deform != 'none':
-		tmp_dt = min(var.sim_time_div, deform_time/var.step_steps)	# dt の暫定値を決定
-		dt = 0.01
-		# while dt >= 1e-2:
-		print(deform_time)
+		dt = 0.005
 		total_steps = round(deform_time/dt)
-		print(deform_time, total_steps)
 		interval = max(1, round(total_steps/var.step_steps))	# 整数値の interval を決定
-			# dt = round(deform_time/var.step_steps/interval, 4)		# 小数点４桁で丸めたdtを決定
 		var.step_deform_time = [dt, total_steps, interval]
 	#
 	if var.simple_def_mode == 'none' and var.cyclic_deform == 'none' and var.step_deform == 'none':
