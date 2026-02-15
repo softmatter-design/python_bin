@@ -93,16 +93,16 @@ def set_udf_batch(rotate):
 		var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 		udf_in =  os.path.join(var.calc_dir, uin)
 		#
-		print(i)
 		if var.sim_time_div > condition[0]/condition[1]:
-			var.sim_time_div = round(condition[0]/condition[1],3)
+			sim_time_div = round(condition[0]/condition[1],3)
 			total_stp = condition[1]
 			int_stp = 1
-			print(var.sim_time_div)
+			sim_time = [sim_time_div, total_stp, int_stp]
 		else:
 			total_stp = round(condition[0]/var.sim_time_div)
 			int_stp = round(condition[0]/var.sim_time_div/condition[1])
-		sim_time = [var.sim_time_div, total_stp, int_stp]
+			sim_time = [var.sim_time_div, total_stp, int_stp]
+		print(i, sim_time)
 		make_steprelax_udf(udf_in, prev_udf, sim_time)
 	
 	#
