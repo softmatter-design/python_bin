@@ -102,7 +102,6 @@ def set_udf_batch(rotate):
 			total_stp = round(condition[0]/var.sim_time_div)
 			int_stp = round(condition[0]/var.sim_time_div/condition[1])
 			sim_time = [var.sim_time_div, total_stp, int_stp]
-		print(i, sim_time)
 		make_steprelax_udf(udf_in, prev_udf, sim_time)
 	
 	#
