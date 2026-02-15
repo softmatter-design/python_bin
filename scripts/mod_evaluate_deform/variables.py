@@ -22,9 +22,12 @@ hystloss = 0
 
 # variables for step
 step_def_mode = ''
-step_flag = 0
 ave_flag = 0
 step_strain = 0.
-elapsed_time = 0
-stepdata_dic = {}
-savgol_parameter = [5, 2]
+deform_time = 0.
+deform_gt = []
+accumd_gt = []
+
+# elapsed_time = 0
+# stepdata_dic = {}
+# savgol_parameter = [5, 2]
