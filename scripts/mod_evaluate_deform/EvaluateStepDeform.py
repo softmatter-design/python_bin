@@ -62,6 +62,7 @@ def calc_deform():
 
 def calc_relax():
 	files = glob.glob("relaxation*out.udf")
+	files.sort()
 	for t_udf in files:
 		read_data(t_udf)
 	return
@@ -170,7 +171,7 @@ def script_content(f_data):
 		script += 'set y2tics\nset xlabel "Strain"\nset ylabel "Stress"\nset y2label "Temp."\n\n'
 		script += 'plot data u 1:2 axis x1y1 w l lw 2 lt 1 ti "stress", \\\n'
 		script += 'data u 1:3 axis x1y2 w l lw 2 lt 2 ti "Temp."'
-	elif ('gt' in f_data) and ("all" not in f_data):
+	elif ('gt' in f_data) and ("position" not in f_data):
 		script += '#set xrange [1e-2:1e6]\n#set yrange [1e-2:1e1]\n#set xtics 1\n#set ytics 0.1\n'
 		script += 'set xlabel "Time"\nset ylabel "G(t)"\n'	
 		script += 'set logscale xy\n\n'	
