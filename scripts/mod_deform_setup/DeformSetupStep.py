@@ -92,7 +92,16 @@ def set_udf_batch(rotate):
 		gen.make_title(var.title_base + '_' + base + f'_relaxation_{i}')
 		var.batch += globvar.ver_Cognac + ' -I ' + uin + ' -O ' + uout + ' -n ' + str(var.core) +' \n'
 		udf_in =  os.path.join(var.calc_dir, uin)
-		make_steprelax_udf(udf_in, prev_udf, condition)
+		#
+		if var.sim_time_div > condition[0]/condition[1]:
+			var.sim_time_div = round(condition[0]/condition[1],3)
+			total_stp = condition[1]
+			int_stp = 1
+		else:
+			total_stp = round(condition[0]/var.sim_time_div)
+			int_stp = round(condition[0]/var.sim_time_div/condition[1])
+		sim_time = [var.sim_time_div, total_stp, int_stp]
+		make_steprelax_udf(udf_in, prev_udf, sim_time)
 	
 	#
 	if platform.system() == "Windows":
@@ -161,7 +170,7 @@ def make_stepdeform_udf(udf_in):
 	return
 
 #-----
-def make_steprelax_udf(udf_in, prev_udf, condition):
+def make_steprelax_udf(udf_in, prev_udf, sim_time):
 	u = UDFManager(var.base_udf)
 	# goto global data
 	u.jump(-1)
@@ -169,9 +178,9 @@ def make_steprelax_udf(udf_in, prev_udf, condition):
 	# Dynamics_Conditions
 	p = 'Simulation_Conditions.Dynamics_Conditions.'
 	u.put(100000.,		p + 'Max_Force')
-	u.put(var.sim_time_div,	p + 'Time.delta_T')
-	u.put(round(condition[0]/var.sim_time_div),	p + 'Time.Total_Steps')
-	u.put(round(condition[0]/var.sim_time_div/condition[1]),	p + 'Time.Output_Interval_Steps')
+	u.put(sim_time[0],	p + 'Time.delta_T')
+	u.put(sim_time[1],	p + 'Time.Total_Steps')
+	u.put(sim_time[2],	p + 'Time.Output_Interval_Steps')
 	u.put(1.0,			p + 'Temperature.Temperature')
 	u.put(0, 			p + 'Temperature.Interval_of_Scale_Temp')
 	u.put(0,			p + 'Pressure_Stress.Pressure')
