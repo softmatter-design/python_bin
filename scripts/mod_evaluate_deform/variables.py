@@ -19,6 +19,7 @@ average = []
 smoothed_f = []
 smoothed_b = []
 hystloss = 0
+sorted_udf = []
 
 # variables for step
 step_def_mode = ''
