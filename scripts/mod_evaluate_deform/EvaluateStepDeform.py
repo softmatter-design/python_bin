@@ -176,7 +176,7 @@ def script_content(f_data):
 		script += 'set xlabel "Time"\nset ylabel "G(t)"\n'	
 		script += 'set logscale xy\n\n'	
 		script += 'set format x "10^{%L}"\nset format y "10^{%L}"\n'
-		script += 'plot	data u 1:2 axis x1y1 w l lw 2 lt 1 ti "G(t)"'
+		script += 'plot	data u 1:2 smooth unique w l lw 2 lt 1 ti "G(t)"'
 	else:
 		script += '#set xrange [1e-2:1e6]\n#set yrange [1e-2:1e1]\n#set xtics 1\n#set ytics 0.1\n'
 		script += f'G={var.nu:}\nfunc ={var.func:}\n'
