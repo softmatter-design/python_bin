@@ -496,7 +496,6 @@ def gather_all():
 					data = line.split()
 					if data[0] != '#':
 						exchange_all.append([str(int(data[0])+shift), data[1], data[2], data[3]])
-		alert=[2,3]
 		if target_list[0].split('_')[1] == '1st':
 			base_name = 'gathered_1st'
 		elif target_list[0].split('_')[1] == '2nd':
