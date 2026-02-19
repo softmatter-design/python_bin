@@ -35,10 +35,15 @@ def evaluate_nw():
 #
 def evaluate_exc():
 	file_select()
-	# var.exchange_list = eval_exc_strand()
-	# make_exc_output()
+	var.exchange_list = eval_exc_strand()
+	make_exc_output()
 	gather_all()
 	return
+
+def evaluate_exc_all():
+	gather_all()
+	return
+
 ################################################################################
 # ネットワークからそれぞれのストランドに対応するポリマー鎖を抽出
 ################################################################################
@@ -464,15 +469,59 @@ def make_exc_output():
 	return
 
 def gather_all():
+	list_1 = []
+	list_2 = []
 	data_list = sorted(glob.glob('./**/Exchange_hist.dat', recursive=True))
-	res = []
-	for i, target in enumerate(data_list):
-		with open(target) as f:
-			if i == 0:
-				print(len(f))
-			print(i)
-			print(f)
+	for each in data_list:
+		if each.split('_')[1] == '1st':
+			list_1.append(each)
+			base_name = 'gathered_1st'
+		elif each.split('_')[1] == '2nd':
+			list_2.append(each)
+			base_name = 'gathered_2nd'
+	for target_list in [list_1, list_2]:
+		shift = 0
+		alert = []
+		exchange_all = []
+		for i, target in enumerate(target_list):
+			with open(target) as f:
+				l=f.readlines()
+				if i == 0:
+					data_length = len(l)
+				elif data_length != len(l):
+					alert.append(i)
+				else:
+					shift = (data_length-1)*i
+				for line in l:
+					data = line.split()
+					if data[0] != '#':
+						exchange_all.append([str(int(data[0])+shift), data[1], data[2], data[3]])
+		alert=[2,3]
+		if target_list[0].split('_')[1] == '1st':
+			base_name = 'gathered_1st'
+		elif target_list[0].split('_')[1] == '2nd':
+			base_name = 'gathered_2nd'
+		if alert != []:
+			target_dir = '_Gathered_Exchange_ALERT_from_' + base_name + '_' + str(alert[0])
+		else:
+			target_dir = '_Gathered_Exchange'
+		output_gathered(exchange_all, base_name, target_dir)
 
+	return
+
+def output_gathered(exchange_all, base_name, target_dir):
+	var.base_name = base_name
+	var.data_list = exchange_all
+	var.leg = ['record', 'results']
+	var.target_dir = target_dir
+	var.f_dat = var.base_name + ".dat"
+	var.f_plt = var.base_name + ".plt"
+	var.f_png = var.base_name + ".png"
+
+	# データを書き出し 
+	write_multi_data()
+	# グラフを作成
+	make_multi_graph()
 	return
 
 ##########################
@@ -655,6 +704,11 @@ def write_multi_data():
 				for data in line:
 					f.write(str(data) + '\t')
 				f.write('\n')
+		elif var.base_name == 'gathered_1st' or var.base_name == 'gathered_2nd':
+			for i, line in enumerate(var.data_list):
+				for data in line:
+					f.write(str(data) + '\t')
+				f.write('\n')
 		else:
 			for i, data in enumerate(var.data_list):
 				f.write("\n\n# " + str(i) +":\n\n")
@@ -739,7 +793,7 @@ def multi_script_content():
 		script += 'data u 1:5 w l ti "zx", \\\n'
 		script += 'data u 1:6 w l ti "xx-yy", \\\n'
 		script += 'data u 1:7 w l ti "yy-zz"'
-	elif var.base_name == 'Exchange':
+	elif var.base_name == 'Exchange' or var.base_name == 'gathered_1st' or var.base_name == 'gathered_2nd':
 		script += 'plot data u 1:2 w l ti "Strands", \\\n'
 		script += 'data u 1:3 w l ti "Danglings", \\\n'
 		script += 'data u 1:4 w l ti "Roops"'
