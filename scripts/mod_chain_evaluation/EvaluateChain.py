@@ -464,7 +464,8 @@ def make_exc_output():
 	return
 
 def gather_all():
-	glob.glob('./**/Exchange_hist.dat', recursive=True)
+	target = glob.glob('./**/Exchange_hist.dat', recursive=True)
+	print(target)
 	return
 
 ##########################
