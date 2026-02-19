@@ -12,6 +12,7 @@ import platform
 import subprocess
 import scipy.signal as signal
 import codecs
+import glob
 #
 from UDFManager import UDFManager
 import CognacUtility as CU
@@ -34,8 +35,9 @@ def evaluate_nw():
 #
 def evaluate_exc():
 	file_select()
-	var.exchange_list = eval_exc_strand()
-	make_exc_output()
+	# var.exchange_list = eval_exc_strand()
+	# make_exc_output()
+	gather_all()
 	return
 ################################################################################
 # ネットワークからそれぞれのストランドに対応するポリマー鎖を抽出
@@ -459,6 +461,10 @@ def make_output():
 def make_exc_output():
 	cond = ["Exchange", var.exchange_list, ['record', 'results']]
 	make_multi(cond)
+	return
+
+def gather_all():
+	glob.glob('./**/Exchange_hist.dat', recursive=True)
 	return
 
 ##########################
