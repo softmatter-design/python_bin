@@ -464,8 +464,15 @@ def make_exc_output():
 	return
 
 def gather_all():
-	target = sorted(glob.glob('./**/Exchange_hist.dat', recursive=True))
-	print(target)
+	data_list = sorted(glob.glob('./**/Exchange_hist.dat', recursive=True))
+	res = []
+	for i, target in enumerate(data_list):
+		with open(target) as f:
+			if i == 0:
+				print(len(f))
+			print(i)
+			print(f)
+
 	return
 
 ##########################
